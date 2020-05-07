@@ -5,6 +5,9 @@ lazy val root = (project in file("."))
     .enablePlugins(DockerComposePlugin)
     .settings(
       name := "akka-persistence-r2dbc",
-      libraryDependencies ++= Dependencies.Libraries
+      libraryDependencies ++= Dependencies.Libraries,
+
+      // We are only using DockerCompose for testing.
+      dockerImageCreationTask := ""
     )
 

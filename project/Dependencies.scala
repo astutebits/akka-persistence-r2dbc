@@ -18,7 +18,7 @@ object Dependencies {
 
     "ch.qos.logback" % "logback-classic" % "1.2.3" % Test,
     "org.scalatest" %% "scalatest" % Versions.scalaTest % Test,
-    "com.typesafe.akka" %% "akka-testkit" % Versions.akka % Test,
+    "com.typesafe.akka" %% "akka-actor-testkit-typed" % Versions.akka % Test,
     "com.typesafe.akka" %% "akka-stream-testkit" % Versions.akka % Test,
     "com.typesafe.akka" %% "akka-persistence-tck" % Versions.akka % Test
   )
