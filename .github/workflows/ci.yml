@@ -1,0 +1,25 @@
+name: akka-persistence-r2dbc CI
+
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+    branches:
+      - master
+  schedule:
+    - cron: '0 0 * * *'
+
+jobs:
+
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout the build container
+        uses: docker://chmodas/docker-scala-sbt:latest
+      - name: Checkout the code
+        uses: actions/checkout@v1
+      - name: Build and test
+        run: sbt dockerComposeTest
