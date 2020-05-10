@@ -21,7 +21,14 @@ lazy val root = (project in file("."))
       // We are only using DockerCompose for testing.
       dockerImageCreationTask := ""
     )
-    .aggregate(postgresql)
+    .aggregate(postgresql, core)
+
+lazy val core = Project(id = "core", base = file("core"))
+    .settings(
+      name := "akka-persistence-r2dbc-core",
+      skip in publish := true,
+      libraryDependencies ++= Dependencies.Core
+    )
 
 lazy val postgresql = Project(id = "postgresql", base = file("postgresql"))
     .settings(
