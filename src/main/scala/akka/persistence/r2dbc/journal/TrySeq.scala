@@ -1,4 +1,4 @@
-package akka.persistence.r2dbc
+package akka.persistence.r2dbc.journal
 
 import scala.collection.immutable.Nil
 import scala.util.{Failure, Success, Try}

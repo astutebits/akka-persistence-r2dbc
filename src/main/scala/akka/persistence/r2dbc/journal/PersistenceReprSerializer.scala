@@ -1,4 +1,4 @@
-package akka.persistence.r2dbc
+package akka.persistence.r2dbc.journal
 
 import akka.persistence.PersistentRepr
 import akka.persistence.journal.Tagged
@@ -31,6 +31,6 @@ private[akka] final class PersistenceReprSerializer(serialization: Serialization
       })
 
   def deserialize(event: JournalEntry): Try[PersistentRepr] = serialization
-      .deserialize(event.message, classOf[PersistentRepr])
+      .deserialize(event.event, classOf[PersistentRepr])
 
 }
