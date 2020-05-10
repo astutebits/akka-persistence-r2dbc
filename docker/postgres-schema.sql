@@ -1,20 +1,22 @@
 DROP TABLE IF EXISTS public.journal_event;
 CREATE TABLE IF NOT EXISTS public.journal_event (
-  ordering BIGSERIAL,
+  index BIGSERIAL,
   persistence_id VARCHAR(255) NOT NULL,
-  sequence_number BIGINT NOT NULL,
+  sequence_nr BIGINT NOT NULL,
+  event BYTEA NOT NULL,
   deleted BOOLEAN DEFAULT FALSE NOT NULL,
-  message BYTEA NOT NULL,
-  PRIMARY KEY(persistence_id, sequence_number)
+  PRIMARY KEY(persistence_id, sequence_nr)
 );
-CREATE UNIQUE INDEX journal_ordering_idx ON public.journal_event(ordering);
+CREATE UNIQUE INDEX journal_ordering_idx ON public.journal_event(index);
 
 DROP TABLE IF EXISTS public.tag;
 CREATE TABLE IF NOT EXISTS public.tag (
- id bigserial,
- event_id BIGINT NOT NULL,
- tag VARCHAR(255) NOT NULL
+ index bigserial,
+ event_index BIGINT NOT NULL,
+ tag VARCHAR(255) NOT NULL,
+ PRIMARY KEY (index)
 );
+CREATE UNIQUE INDEX tag_journal_event_index_idx ON public.tag(event_index);
 
 DROP TABLE IF EXISTS public.snapshot;
 CREATE TABLE IF NOT EXISTS public.snapshot (

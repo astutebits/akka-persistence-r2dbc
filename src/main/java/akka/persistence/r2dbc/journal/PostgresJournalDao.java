@@ -1,12 +1,12 @@
-package akka.persistence.r2dbc;
+package akka.persistence.r2dbc.journal;
 
-import static akka.persistence.r2dbc.JournalStatements.deleteEventsQuery;
-import static akka.persistence.r2dbc.JournalStatements.findEventsQuery;
-import static akka.persistence.r2dbc.JournalStatements.highestMarkedSeqNrQuery;
-import static akka.persistence.r2dbc.JournalStatements.highestSeqNrQuery;
-import static akka.persistence.r2dbc.JournalStatements.insertEventsQuery;
-import static akka.persistence.r2dbc.JournalStatements.insertTagsQuery;
-import static akka.persistence.r2dbc.JournalStatements.markEventsAsDeleted;
+import static akka.persistence.r2dbc.journal.JournalStatements.deleteEventsQuery;
+import static akka.persistence.r2dbc.journal.JournalStatements.findEventsQuery;
+import static akka.persistence.r2dbc.journal.JournalStatements.highestMarkedSeqNrQuery;
+import static akka.persistence.r2dbc.journal.JournalStatements.highestSeqNrQuery;
+import static akka.persistence.r2dbc.journal.JournalStatements.insertEventsQuery;
+import static akka.persistence.r2dbc.journal.JournalStatements.insertTagsQuery;
+import static akka.persistence.r2dbc.journal.JournalStatements.markEventsAsDeleted;
 
 import akka.Done;
 import io.r2dbc.postgresql.PostgresqlConnectionFactory;
@@ -41,7 +41,7 @@ public final class PostgresJournalDao {
                 connection.createStatement(insertEventsQuery(events))
                     .execute()
                     .flatMap(result -> result.map((row, metadata) ->
-                        row.get("ordering", Long.class))
+                        row.get("index", Long.class))
                     )
                     .zipWithIterable(events.stream()
                         .map(event -> CollectionConverters.asJava(event.tags()))
@@ -70,10 +70,10 @@ public final class PostgresJournalDao {
     return factory.create().flatMapMany(connection ->
         connection.createStatement(findEventsQuery(persistenceId, fromSeqNr, toSeqNr)).execute()
             .flatMap(result -> result.map((row, metadata) -> JournalEntry.of(
-                row.get("ordering", Long.class),
+                row.get("index", Long.class),
                 row.get("persistence_id", String.class),
-                row.get("sequence_number", Long.class),
-                row.get("message", byte[].class)
+                row.get("sequence_nr", Long.class),
+                row.get("event", byte[].class)
             )))
             .concatWith(Flux.from(connection.close()).then(Mono.empty()))
             .onErrorResume(throwable -> Flux.from(connection.close()).then(Mono.error(throwable)))
@@ -99,7 +99,7 @@ public final class PostgresJournalDao {
                     connection.createStatement(highestMarkedSeqNrQuery(persistenceId))
                         .execute()
                         .flatMap(result -> result.map((row, metadata) ->
-                            row.get("sequence_number", Long.class))
+                            row.get("sequence_nr", Long.class))
                         )
                 )
                 .defaultIfEmpty(0L)
@@ -119,7 +119,7 @@ public final class PostgresJournalDao {
   }
 
   /**
-   * Selects the event with the highest {@code sequence_number} whose {@code deleted} set to true.
+   * Selects the event with the highest {@code sequence_nr} whose {@code deleted} set to true.
    *
    * @param persistenceId the persistence ID
    * @param fromSequenceNr sequence number (inclusive)
@@ -128,7 +128,7 @@ public final class PostgresJournalDao {
     return factory.create().flatMapMany(connection ->
         connection.createStatement(highestSeqNrQuery(persistenceId, fromSequenceNr)).execute()
             .flatMap(result -> result.map(((row, metadata) ->
-                row.get("sequence_number", Long.class)))
+                row.get("sequence_nr", Long.class)))
             )
             .defaultIfEmpty(0L)
             .concatWith(Flux.from(connection.close()).then(Mono.empty()))

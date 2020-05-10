@@ -1,4 +1,4 @@
-package akka.persistence.r2dbc
+package akka.persistence.r2dbc.journal
 
 import akka.Done
 import akka.persistence._
@@ -9,7 +9,7 @@ import akka.stream.scaladsl.{Sink, Source}
 import com.typesafe.config.Config
 import io.r2dbc.postgresql.{PostgresqlConnectionConfiguration, PostgresqlConnectionFactory}
 import java.util.{HashMap => JHMap, Map => JMap}
-import scala.collection.immutable.{Nil, Seq}
+import scala.collection.immutable.Seq
 import scala.concurrent.{ExecutionContext, Future, Promise}
 import scala.jdk.CollectionConverters._
 import scala.util.Try
@@ -30,7 +30,7 @@ class PostgresJournal(config: Config) extends AsyncWriteJournal {
 
   private val writeInProgress: JMap[String, Future[Done]] = new JHMap
   private val serializer = new PersistenceReprSerializer(SerializationExtension(context.system))
-  private val pluginConfig = PluginConfig(config)
+  private val pluginConfig = PostgresqlPluginConfig(config)
 
   private val cf = new PostgresqlConnectionFactory(PostgresqlConnectionConfiguration.builder()
       .host(pluginConfig.hostname)

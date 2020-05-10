@@ -1,4 +1,4 @@
-package akka.persistence.r2dbc
+package akka.persistence.r2dbc.journal
 
 import akka.persistence.CapabilityFlag
 import akka.persistence.journal.JournalSpec
