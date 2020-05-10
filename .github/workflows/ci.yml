@@ -22,4 +22,4 @@ jobs:
       - name: Checkout the code
         uses: actions/checkout@v1
       - name: Build and test
-        run: sbt dockerComposeTest
+        run: sbt "dockerComposeUp;test;dockerComposeStop"
