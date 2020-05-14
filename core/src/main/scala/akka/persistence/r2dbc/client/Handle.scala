@@ -44,4 +44,5 @@ final class Handle(connection: Connection) {
               .concat(Source.failed(throwable))
         })
 
+  def close = connection.close()
 }
