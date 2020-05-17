@@ -2,6 +2,13 @@ import sbt.Keys.skip
 
 ThisBuild / scalaVersion := "2.13.1"
 ThisBuild / organization := "com.astutebits"
+ThisBuild / javacOptions ++= Seq(
+  "-encoding", "UTF-8",
+  "-deprecation",
+  "-Xlint:unchecked",
+  "-XDignore.symbol.file",
+  "-Xlint:deprecation"
+)
 ThisBuild / scalacOptions ++= Seq(
   "-encoding", "utf8",
   "-deprecation",
@@ -29,12 +36,18 @@ lazy val core = Project(id = "core", base = file("core"))
       skip in publish := true,
       libraryDependencies ++= Dependencies.Core
     )
+    .settings(fork in Test := true)
 
 lazy val postgresql = Project(id = "postgresql", base = file("postgresql"))
     .settings(
       name := "akka-persistence-postgresql",
       libraryDependencies ++= Dependencies.Libraries
     )
+    .settings(
+      fork in Test := true,
+      parallelExecution in Test := false
+    )
+    .dependsOn(core)
 
 lazy val `perf-tests` = Project(id = "perf-tests", base = file("perf-tests"))
     .settings(

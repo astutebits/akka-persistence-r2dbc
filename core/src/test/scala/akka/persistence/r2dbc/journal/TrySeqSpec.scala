@@ -1,4 +1,4 @@
-package akka.persistence.postgresql.journal
+package akka.persistence.r2dbc.journal
 
 import org.scalatest.TryValues._
 import org.scalatest.flatspec.AnyFlatSpecLike
