@@ -18,7 +18,7 @@ jobs:
 
     steps:
       - name: Checkout the build container
-        uses: docker://chmodas/docker-scala-sbt:latest
+        uses: docker://chmodas/docker-scala-sbt:11
       - name: Checkout the code
         uses: actions/checkout@v1
       - name: Build and test
