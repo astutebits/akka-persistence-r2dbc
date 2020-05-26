@@ -12,8 +12,7 @@ object PostgresqlJournalSpec {
 
   private val JournalPluginConfig = ConfigFactory.parseString(
     """
-      |akka.persistence.journal.plugin = "postgres-journal"
-      |postgres-journal.class = "akka.persistence.postgresql.journal.PostgresqlJournal"
+      |akka.persistence.journal.plugin = "postgresql-journal"
       |akka.loglevel = "DEBUG"
       |""".stripMargin)
 }

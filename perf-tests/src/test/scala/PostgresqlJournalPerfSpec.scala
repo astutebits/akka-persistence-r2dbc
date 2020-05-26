@@ -1,13 +1,13 @@
 import akka.persistence.CapabilityFlag
 import akka.persistence.journal.JournalPerfSpec
-import com.typesafe.config.ConfigFactory
+import com.typesafe.config.{Config, ConfigFactory}
 import io.r2dbc.postgresql.{PostgresqlConnectionConfiguration, PostgresqlConnectionFactory}
 import org.scalatest.concurrent.Eventually
 import reactor.core.publisher.{Flux, Mono}
 import scala.concurrent.duration._
 
-class PostgresJournalPerfSpec
-    extends JournalPerfSpec(config = PostgresJournalPerfSpec.PluginConfig)
+final class PostgresqlJournalPerfSpec
+    extends JournalPerfSpec(config = PostgresqlJournalPerfSpec.PluginConfig)
         with Eventually {
 
   override def beforeAll(): Unit = {
@@ -39,9 +39,9 @@ class PostgresJournalPerfSpec
   override protected def supportsRejectingNonSerializableObjects: CapabilityFlag = true
 
 }
-object PostgresJournalPerfSpec {
-  val PluginConfig = ConfigFactory.parseString(
+object PostgresqlJournalPerfSpec {
+  val PluginConfig: Config = ConfigFactory.parseString(
     """
-      |akka.persistence.journal.plugin = "postgres-journal"
+      |akka.persistence.journal.plugin = "postgresql-journal"
       |""".stripMargin)
 }
