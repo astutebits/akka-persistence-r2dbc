@@ -1,5 +1,6 @@
 package akka.persistence.postgresql.journal;
 
+import akka.persistence.r2dbc.journal.JournalEntry;
 import io.netty.buffer.ByteBufUtil;
 import java.util.List;
 import java.util.Set;
@@ -7,7 +8,7 @@ import java.util.stream.Collectors;
 import reactor.util.function.Tuple2;
 import reactor.util.function.Tuples;
 
-public final class JournalStatements {
+final class JournalStatements {
 
   private JournalStatements() {
   }
@@ -32,7 +33,7 @@ public final class JournalStatements {
         .collect(Collectors.joining(","));
   }
 
-  static String markEventsAsDeleted(String persistenceId, Long toSeqNr) {
+  static String markEventsAsDeletedQuery(String persistenceId, Long toSeqNr) {
     return "UPDATE journal_event SET deleted = true"
         + " WHERE persistence_id = '" + persistenceId + "' AND sequence_nr <= " + toSeqNr;
   }
@@ -55,11 +56,11 @@ public final class JournalStatements {
         + " ORDER BY sequence_nr DESC LIMIT 1";
   }
 
-  static String findEventsQuery(String persistenceId, long fromSeqNr, long toSeqNr) {
+  static String findEventsQuery(String persistenceId, long fromSeqNr, long toSeqNr, long max) {
     return "SELECT index, persistence_id, sequence_nr, event FROM journal_event"
         + " WHERE deleted = false AND persistence_id = '" + persistenceId + "'"
         + " AND sequence_nr BETWEEN " + fromSeqNr + " AND " + toSeqNr
-        + " ORDER BY sequence_nr ASC";
+        + " ORDER BY sequence_nr ASC LIMIT " + max;
   }
 
 }
