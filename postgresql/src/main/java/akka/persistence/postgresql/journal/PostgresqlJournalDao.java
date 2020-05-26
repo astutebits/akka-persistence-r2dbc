@@ -1,73 +1,27 @@
 package akka.persistence.postgresql.journal;
 
+import static akka.persistence.postgresql.journal.JournalStatements.deleteEventsQuery;
+import static akka.persistence.postgresql.journal.JournalStatements.findEventsQuery;
+import static akka.persistence.postgresql.journal.JournalStatements.highestMarkedSeqNrQuery;
+import static akka.persistence.postgresql.journal.JournalStatements.highestSeqNrQuery;
+import static akka.persistence.postgresql.journal.JournalStatements.insertEventsQuery;
+import static akka.persistence.postgresql.journal.JournalStatements.insertTagsQuery;
+import static akka.persistence.postgresql.journal.JournalStatements.markEventsAsDeletedQuery;
+
 import akka.NotUsed;
 import akka.persistence.r2dbc.client.R2dbc;
 import akka.persistence.r2dbc.journal.AbstractJournalDao;
 import akka.persistence.r2dbc.journal.JournalEntry;
 import akka.stream.scaladsl.Source;
-import io.netty.buffer.ByteBufUtil;
 import io.r2dbc.spi.Result;
 import java.util.List;
-import java.util.Set;
 import java.util.stream.Collectors;
 import org.reactivestreams.Publisher;
 import reactor.core.publisher.Flux;
 import reactor.util.function.Tuple2;
-import reactor.util.function.Tuples;
 import scala.jdk.javaapi.CollectionConverters;
 
 public final class PostgresqlJournalDao extends AbstractJournalDao {
-
-  static String insertEventsQuery(List<JournalEntry> events) {
-    return "INSERT INTO journal_event (index, persistence_id, sequence_nr, event) VALUES "
-        + events.stream()
-        .map(event -> "("
-            + "DEFAULT,"
-            + "'" + event.persistenceId() + "',"
-            + event.sequenceNr() + ","
-            + "'\\x" + ByteBufUtil.hexDump(event.event()) + "'"
-            + ")")
-        .collect(Collectors.joining(","))
-        + " RETURNING index;";
-  }
-
-  static String insertTagsQuery(List<Tuple2<Long, Set<String>>> items) {
-    return "INSERT INTO tag (index, event_index, tag) VALUES " + items.stream()
-        .flatMap(item -> item.getT2().stream().map(tag -> Tuples.of(item.getT1(), tag)))
-        .map(item -> "(DEFAULT," + item.getT1() + ",'" + item.getT2() + "')")
-        .collect(Collectors.joining(","));
-  }
-
-  static String markEventsAsDeleted(String persistenceId, Long toSeqNr) {
-    return "UPDATE journal_event SET deleted = true"
-        + " WHERE persistence_id = '" + persistenceId + "' AND sequence_nr <= " + toSeqNr;
-  }
-
-  static String highestMarkedSeqNrQuery(String persistenceId) {
-    return "SELECT sequence_nr FROM journal_event"
-        + " WHERE persistence_id = '" + persistenceId + "' AND deleted = true"
-        + " ORDER BY sequence_nr DESC LIMIT 1";
-  }
-
-  static String deleteEventsQuery(String persistenceId, Long toSeqNr) {
-    return "DELETE FROM journal_event WHERE persistence_id = '" + persistenceId + "'"
-        + " AND sequence_nr <= " + toSeqNr;
-  }
-
-  static String highestSeqNrQuery(String persistenceId, Long fromSeqNr) {
-    return "SELECT sequence_nr FROM journal_event"
-        + " WHERE persistence_id = '" + persistenceId + "'"
-        + " AND sequence_nr >= " + fromSeqNr
-        + " ORDER BY sequence_nr DESC LIMIT 1";
-  }
-
-  static String findEventsQuery(String persistenceId, long fromSeqNr, long toSeqNr, long max) {
-    return "SELECT index, persistence_id, sequence_nr, event FROM journal_event"
-        + " WHERE deleted = false AND persistence_id = '" + persistenceId + "'"
-        + " AND sequence_nr BETWEEN " + fromSeqNr + " AND " + toSeqNr
-        + " ORDER BY sequence_nr ASC LIMIT " + max;
-  }
-
 
   private final R2dbc r2dbc;
 
@@ -121,7 +75,7 @@ public final class PostgresqlJournalDao extends AbstractJournalDao {
   @Override
   public Source<Integer, NotUsed> doDeleteEvents(String persistenceId, Long toSeqNr) {
     Flux<Integer> flux = r2dbc.inTransaction(handle ->
-        handle.executeQuery(markEventsAsDeleted(persistenceId, toSeqNr), Result::getRowsUpdated)
+        handle.executeQuery(markEventsAsDeletedQuery(persistenceId, toSeqNr), Result::getRowsUpdated)
             .thenMany(handle.executeQuery(highestMarkedSeqNrQuery(persistenceId),
                 PostgresqlJournalDao::toSeqNr)
                 .defaultIfEmpty(0L)

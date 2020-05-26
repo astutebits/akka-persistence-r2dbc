@@ -21,21 +21,16 @@ object Dependencies {
     "io.r2dbc" % "r2dbc-spi-test" % Versions.r2dbcSpi % Test,
     "com.typesafe.akka" %% "akka-actor-testkit-typed" % Versions.akka % Test,
     "com.typesafe.akka" %% "akka-stream-testkit" % Versions.akka % Test,
-
-  "ch.qos.logback" % "logback-classic" % "1.2.3" % Test
+    "ch.qos.logback" % "logback-classic" % "1.2.3" % Test
   )
 
   val Libraries = Seq(
-    "com.typesafe.akka" %% "akka-actor-typed" % Versions.akka,
-    "com.typesafe.akka" %% "akka-stream-typed" % Versions.akka,
-    "com.typesafe.akka" %% "akka-persistence-typed" % Versions.akka,
     "com.typesafe.akka" %% "akka-persistence-query" % Versions.akka,
 
     "io.r2dbc" % "r2dbc-postgresql" % Versions.r2dbc,
 
     "ch.qos.logback" % "logback-classic" % "1.2.3" % Test,
     "org.scalatest" %% "scalatest" % Versions.scalaTest % Test,
-    "com.typesafe.akka" %% "akka-actor-testkit-typed" % Versions.akka % Test,
     "com.typesafe.akka" %% "akka-stream-testkit" % Versions.akka % Test,
     "com.typesafe.akka" %% "akka-persistence-tck" % Versions.akka % Test
   )
