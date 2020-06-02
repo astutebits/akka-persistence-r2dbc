@@ -16,6 +16,7 @@
 
 package akka.persistence.r2dbc.client;
 
+import io.r2dbc.spi.Result;
 import java.util.Objects;
 import java.util.function.Function;
 import java.util.function.Supplier;
