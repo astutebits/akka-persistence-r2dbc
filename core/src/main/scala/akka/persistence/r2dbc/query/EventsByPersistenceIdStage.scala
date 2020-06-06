@@ -1,13 +1,11 @@
 package akka.persistence.r2dbc.query
 
+import akka.NotUsed
 import akka.persistence.r2dbc.journal.JournalEntry
-import akka.stream.scaladsl.{Sink, Source}
-import akka.stream.stage._
-import akka.stream.{Attributes, Outlet, SourceShape}
+import akka.stream.scaladsl.Source
 import scala.concurrent.duration.FiniteDuration
 
-object EventsByPersistenceIdStage {
-  val PollTimerKey = "FetchEvents"
+private[akka] object EventsByPersistenceIdStage {
 
   def apply(
       dao: QueryDao,
@@ -17,99 +15,41 @@ object EventsByPersistenceIdStage {
       refreshInterval: Option[FiniteDuration] = None
   ): EventsByPersistenceIdStage =
     new EventsByPersistenceIdStage(dao, persistenceId, fromSeqNr, toSeqNr, refreshInterval)
+
 }
 
-final class EventsByPersistenceIdStage(
+/**
+ * Walks the journal entries returning any events that match the given persistence ID.
+ */
+private[akka] final class EventsByPersistenceIdStage private(
     dao: QueryDao,
     persistenceId: String,
     fromSeqNr: Long,
     toSeqNr: Long,
-    refreshInterval: Option[FiniteDuration] = None
-) extends GraphStage[SourceShape[JournalEntry]] {
+    val refreshInterval: Option[FiniteDuration] = None
+) extends EventsByStage {
+
+  require(dao != null, "the 'dao' must be provided")
   require(persistenceId != null && persistenceId.nonEmpty, "the 'persistenceId' must be provided")
   require(fromSeqNr >= 0, "the 'fromSeqNr' must be >= 0")
   require(toSeqNr >= 0, "the 'toSeqNr' must be >= 0")
   require(fromSeqNr < toSeqNr, "the 'fromSeqNr' must be < the 'toSeqNr'")
 
-  import EventsByPersistenceIdStage.PollTimerKey
+  private var currentSeq: Long = fromSeqNr
+  private var targetSeq: Long = 0
 
-  private val out: Outlet[JournalEntry] = Outlet("Event.out")
+  override protected def pushedEntry(entry: JournalEntry): Unit =
+    currentSeq = entry.sequenceNr
 
-  override def createLogic(attributes: Attributes): GraphStageLogic = new TimerGraphStageLogic(shape) with InHandler with OutHandler {
-    private var sinkIn: SubSinkInlet[JournalEntry] = _
-    private var currentCycle = 0
-    private var currentIndex = fromSeqNr
-    private var targetIndex: Long = 0
-
-    // Initial handler (until the SubSinkInlet is attached)
-    setHandler(out, new OutHandler {
-      def onPull(): Unit = {
-      }
-    })
-
-    override def preStart(): Unit = {
-      fetchEvents()
-    }
-
-    override def postStop(): Unit = {
-      if (!sinkIn.isClosed)
-        sinkIn.cancel()
-    }
-
-    override protected def onTimer(timerKey: Any): Unit = timerKey match {
-      case PollTimerKey =>
-        fetchEvents()
-    }
-
-    override def onPush(): Unit = {
-      val entry = sinkIn.grab()
-      currentIndex = entry.sequenceNr
-      push(out, entry)
-    }
-
-    override def onPull(): Unit = {
-      if (!sinkIn.isClosed)
-        sinkIn.pull()
-    }
-
-    override def onUpstreamFinish(): Unit = {
-      if (refreshInterval.isEmpty) {
-        completeStage()
-      } else {
-        refreshInterval.foreach(interval => {
-          currentCycle += 1
-          scheduleOnce(PollTimerKey, interval)
+  override protected def fetchEvents(): Source[JournalEntry, NotUsed] =
+    dao.findHighestSeq(persistenceId)
+        .flatMapConcat(result => {
+          if (targetSeq == result)
+            Source.empty
+          else {
+            targetSeq = if (result > toSeqNr && currentCycle == 0) toSeqNr else result
+            dao.fetchByPersistenceId(persistenceId, if (currentCycle == 0) currentSeq else currentSeq + 1, targetSeq)
+          }
         })
-      }
-    }
 
-    override def onUpstreamFailure(ex: Throwable): Unit = {
-      cancelTimer(PollTimerKey)
-      failStage(ex)
-    }
-
-    private def fetchEvents(): Unit = {
-      sinkIn = new SubSinkInlet[JournalEntry](s"Event.in")
-
-      Source.future(dao.findHighestSeq(persistenceId)
-          .runWith(Sink.last)(subFusingMaterializer))
-          .flatMapConcat(result => {
-            if (targetIndex == result)
-              Source.empty
-            else {
-              targetIndex = if (result > toSeqNr && currentCycle == 0) toSeqNr else result
-              dao.fetchByPersistenceId(persistenceId, if (currentCycle == 0) currentIndex else currentIndex + 1, targetIndex)
-            }
-          })
-          .to(sinkIn.sink).run()(subFusingMaterializer)
-
-      if (isAvailable(out))
-        sinkIn.pull()
-
-      setHandler(out, this)
-      sinkIn.setHandler(this)
-    }
-  }
-
-  override def shape: SourceShape[JournalEntry] = SourceShape(out)
 }

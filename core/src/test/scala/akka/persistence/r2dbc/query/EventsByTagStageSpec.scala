@@ -35,7 +35,13 @@ final class EventsByTagStageSpec
     super.afterAll()
   }
 
-  "EventsByTagStage" should "throw an exception when 'tag' is not provided" in {
+  "EventsByTagStage" should "throw an exception when 'dao' is not provided" in {
+    a[IllegalArgumentException] should be thrownBy {
+      EventsByTagStage(null, "tag", 1, Some(100.millis))
+    }
+  }
+
+  it should "throw an exception when 'tag' is not provided" in {
     a[IllegalArgumentException] should be thrownBy {
       EventsByTagStage(dao, "", 1, Some(100.millis))
     }
@@ -55,7 +61,7 @@ final class EventsByTagStageSpec
     }
   }
 
-  it should "fetch the current events when refreshInterval is not specified" in {
+  it should "fetch the current events if 'refreshInterval' is not specified" in {
     val events = List(
       JournalEntry(1, false, "foo", 1, "test-value".getBytes, Set("FooEvent")),
       JournalEntry(3, false, "foo", 2, "test-value-2".getBytes, Set("FooEvent")),
@@ -74,7 +80,17 @@ final class EventsByTagStageSpec
         .expectComplete()
   }
 
-  it should "fetch events indefinitely when refreshInterval is specified" in {
+  it should "complete if no events are found and 'refreshInterval' is not specified" in {
+    dao.findHighestIndex("FooEvent") returns Source.empty
+
+    Source.fromGraph(EventsByTagStage(dao, "FooEvent", 1))
+        .runWith(TestSink.probe[JournalEntry])
+        .ensureSubscription()
+        .request(2)
+        .expectComplete()
+  }
+
+  it should "fetch events indefinitely if 'refreshInterval' is specified" in {
     val firstSet = Seq(
       JournalEntry(1, false, "foo", 1, "test-value".getBytes, Set("FooEvent")),
       JournalEntry(3, false, "foo", 2, "test-value-2".getBytes, Set("FooEvent")),
@@ -86,7 +102,7 @@ final class EventsByTagStageSpec
 
     dao.findHighestIndex("FooEvent") returns Source.single(5) andThen Source.single(7)
     dao.fetchByTag("FooEvent", 1, 5) returns Source(firstSet)
-    dao.fetchByTag("FooEvent", 5, 7) returns Source(secondSet)
+    dao.fetchByTag("FooEvent", 6, 7) returns Source(secondSet)
 
     Source.fromGraph(EventsByTagStage(dao, "FooEvent", 1, Some(100.millis)))
         .runWith(TestSink.probe[JournalEntry])
@@ -99,8 +115,21 @@ final class EventsByTagStageSpec
         .cancel()
 
     dao.fetchByTag("FooEvent", 1, 5) was called
-    dao.fetchByTag("FooEvent", 5, 7) was called
+    dao.fetchByTag("FooEvent", 6, 7) was called
     dao.findHighestIndex("FooEvent") wasCalled atLeastThreeTimes
+  }
+
+  it should "keep running even if no events were found" in {
+    dao.findHighestIndex("FooEvent") returns Source.empty
+
+    Source.fromGraph(EventsByTagStage(dao, "FooEvent", 1, Some(100.millis)))
+        .runWith(TestSink.probe[JournalEntry])
+        .ensureSubscription()
+        .request(2)
+        .expectNoMessage(200.millis)
+        .cancel()
+
+    dao.findHighestIndex("FooEvent") wasCalled atLeastTwice
   }
 
   it should "fail the stage if the 'findHighestIndex' DAO call fails" in {
@@ -135,7 +164,7 @@ final class EventsByTagStageSpec
 
     dao.findHighestIndex("FooEvent") returns Source.single(5) andThen Source.single(7)
     dao.fetchByTag("FooEvent", 1, 5) returns Source(firstSet)
-    dao.fetchByTag("FooEvent", 5, 7) returns Source.failed(new IllegalStateException("Boom"))
+    dao.fetchByTag("FooEvent", 6, 7) returns Source.failed(new IllegalStateException("Boom"))
 
     Source.fromGraph(EventsByTagStage(dao, "FooEvent", 1, Some(100.millis)))
         .runWith(TestSink.probe[JournalEntry])
@@ -147,7 +176,7 @@ final class EventsByTagStageSpec
         .expectError()
 
     dao.fetchByTag("FooEvent", 1, 5) was called
-    dao.fetchByTag("FooEvent", 5, 7) was called
+    dao.fetchByTag("FooEvent", 6, 7) was called
     dao.findHighestIndex("FooEvent") wasCalled twice
   }
 

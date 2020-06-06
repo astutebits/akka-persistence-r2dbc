@@ -35,7 +35,13 @@ final class EventsByPersistenceIdStageSpec
     super.afterAll()
   }
 
-  "EventsByPersistenceIdStage" should "throw an exception when 'persistenceId' is not provided" in {
+  "EventsByPersistenceIdStage" should "throw an exception when 'dao' is not provided" in {
+    a[IllegalArgumentException] should be thrownBy {
+      EventsByPersistenceIdStage(null, "persistenceId", 0, Long.MaxValue)
+    }
+  }
+
+  it should "throw an exception when 'persistenceId' is not provided" in {
     a[IllegalArgumentException] should be thrownBy {
       EventsByPersistenceIdStage(dao, "", 0, Long.MaxValue)
     }
@@ -113,7 +119,7 @@ final class EventsByPersistenceIdStageSpec
         .expectComplete()
   }
 
-  it should "fetch events indefinitely when refreshInterval and subset is specified" in {
+  it should "fetch events indefinitely, starting with the given subset, if 'refreshInterval' is defined" in {
     val pId = "foo"
     val firstSet = Seq(
       JournalEntry(1, false, pId, 1, "test-value".getBytes, Set("FooEvent")),
