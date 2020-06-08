@@ -7,6 +7,20 @@ import akka.stream.scaladsl.Source
 private[akka] trait QueryDao {
 
   /**
+   * Returns a tuple of distinct persistence ids and the max index found for each persistence id
+   * (ordered by the index).
+   *
+   * A call similar to the one below:
+   * {{{
+   * SELECT persistence_id, max(index) AS index FROM journal_event WHERE index > 50000 GROUP BY persistence_id ORDER BY index;
+   * }}}
+   *
+   * @param offset from index (inclusive)
+   * @return a [[Source]] with tuple of `persistenceId`s and max `index`es.
+   */
+  def fetchPersistenceIds(offset: Long): Source[(Long, String), NotUsed]
+
+  /**
    * Returns a [[Source]] with a subset of [[JournalEntry]] in the selected `sequenceNr` range for
    * the given `persistenceId`.
    *
