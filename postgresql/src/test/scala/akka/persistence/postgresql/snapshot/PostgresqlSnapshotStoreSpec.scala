@@ -14,7 +14,6 @@ object PostgresqlSnapshotStoreSpec {
   private val PluginConfig = ConfigFactory.parseString(
     """
       |akka.persistence.snapshot-store.plugin = "postgres-snapshot"
-      |postgres-snapshot.class = "akka.persistence.postgresql.snapshot.PostgresqlSnapshotStore"
       |""".stripMargin)
 
 }
