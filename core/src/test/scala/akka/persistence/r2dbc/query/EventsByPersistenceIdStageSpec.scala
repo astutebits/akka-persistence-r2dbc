@@ -119,7 +119,7 @@ final class EventsByPersistenceIdStageSpec
         .expectComplete()
   }
 
-  it should "fetch events indefinitely, starting with the given subset, if 'refreshInterval' is defined" in {
+  it should "fetch events until the given subset is returned if 'refreshInterval' is defined" in {
     val pId = "foo"
     val firstSet = Seq(
       JournalEntry(1, false, pId, 1, "test-value".getBytes, Set("FooEvent")),
@@ -135,7 +135,7 @@ final class EventsByPersistenceIdStageSpec
     dao.fetchByPersistenceId(pId, 1, 3) returns Source(firstSet)
     dao.fetchByPersistenceId(pId, 4, 5) returns Source(secondSet)
 
-    Source.fromGraph(EventsByPersistenceIdStage(dao, pId, 1, 3, Some(100.millis)))
+    Source.fromGraph(EventsByPersistenceIdStage(dao, pId, 1, 5, Some(100.millis)))
         .runWith(TestSink.probe[JournalEntry])
         .ensureSubscription()
         .requestNext(firstSet.head)
@@ -143,9 +143,7 @@ final class EventsByPersistenceIdStageSpec
         .requestNext(firstSet.last)
         .requestNext(secondSet.head)
         .requestNext(secondSet.last)
-        .request(1)
-        .expectNoMessage(200.millis)
-        .cancel()
+        .expectComplete()
   }
 
   it should "fetch events indefinitely when refreshInterval is specified" in {

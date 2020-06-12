@@ -5,6 +5,7 @@ import akka.persistence.r2dbc.journal.JournalEntry
 import akka.stream.scaladsl.Source
 import akka.stream.stage._
 import akka.stream.{Attributes, Outlet, SourceShape}
+import java.util.concurrent.atomic.AtomicBoolean
 import scala.concurrent.duration.FiniteDuration
 
 private[akka] object EventsByStage {
@@ -18,9 +19,9 @@ private[akka] abstract class EventsByStage extends GraphStage[SourceShape[Journa
   import EventsByStage.PollTimerKey
 
   protected val refreshInterval: Option[FiniteDuration]
+  protected val completeSwitch: AtomicBoolean
 
   private val out: Outlet[JournalEntry] = Outlet("Event.out")
-  private var _currentCycle = 0
 
   final override def createLogic(attributes: Attributes): GraphStageLogic = new TimerGraphStageLogic(shape) with InHandler with OutHandler {
     private var sinkIn: SubSinkInlet[JournalEntry] = _
@@ -57,11 +58,10 @@ private[akka] abstract class EventsByStage extends GraphStage[SourceShape[Journa
     }
 
     override def onUpstreamFinish(): Unit = {
-      if (refreshInterval.isEmpty) {
+      if (refreshInterval.isEmpty || completeSwitch.get()) {
         completeStage()
       } else {
         refreshInterval.foreach(interval => {
-          _currentCycle += 1
           scheduleOnce(PollTimerKey, interval)
         })
       }
@@ -86,8 +86,6 @@ private[akka] abstract class EventsByStage extends GraphStage[SourceShape[Journa
   }
 
   final override def shape: SourceShape[JournalEntry] = SourceShape(out)
-
-  final def currentCycle: Long = _currentCycle
 
   protected def pushedEntry(entry: JournalEntry): Unit
 
