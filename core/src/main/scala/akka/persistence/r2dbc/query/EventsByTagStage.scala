@@ -3,6 +3,7 @@ package akka.persistence.r2dbc.query
 import akka.NotUsed
 import akka.persistence.r2dbc.journal.JournalEntry
 import akka.stream.scaladsl.Source
+import java.util.concurrent.atomic.AtomicBoolean
 import scala.concurrent.duration.FiniteDuration
 
 private[akka] object EventsByTagStage {
@@ -30,11 +31,16 @@ private[akka] final class EventsByTagStage private(
   require(tag != null && tag.nonEmpty, "the 'tag' must be provided")
   require(offset >= 0, "the 'offset' must be >= 0")
 
+  private var processedEntries: Long = 0
   private var currentIndex: Long = offset
   private var targetIndex: Long = 0
 
-  override protected def pushedEntry(entry: JournalEntry): Unit =
+  final protected val completeSwitch = new AtomicBoolean()
+
+  override protected def pushedEntry(entry: JournalEntry): Unit = {
+    processedEntries += 1
     currentIndex = entry.index
+  }
 
   override protected def fetchEvents(): Source[JournalEntry, NotUsed] =
     dao.findHighestIndex(tag)
@@ -43,7 +49,7 @@ private[akka] final class EventsByTagStage private(
             Source.empty
           } else {
             targetIndex = result
-            dao.fetchByTag(tag, if (currentCycle == 0) currentIndex else currentIndex + 1, targetIndex)
+            dao.fetchByTag(tag, if (processedEntries == 0) currentIndex else currentIndex + 1, targetIndex)
           }
         })
 
