@@ -20,7 +20,10 @@ private[akka] final class PersistenceReprSerializer(serialization: Serialization
   import PersistenceReprSerializer._
 
   def serialize(persistentRepr: PersistentRepr): Try[JournalEntry] = serialization
-      .serialize(persistentRepr)
+      .serialize(persistentRepr.payload match {
+        case Tagged(payload, _)  => persistentRepr.withPayload(payload)
+        case _ => persistentRepr
+      })
       .map(bytes => {
         JournalEntry(
           Long.MinValue,
