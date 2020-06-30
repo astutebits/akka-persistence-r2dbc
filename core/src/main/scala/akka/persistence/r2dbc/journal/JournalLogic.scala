@@ -25,7 +25,9 @@ trait JournalLogic {
 
   def asyncWriteMessages(messages: Seq[AtomicWrite]): Future[Seq[Try[Unit]]] = {
     val serializedTries: Seq[Try[Seq[JournalEntry]]] = messages.map { atomicWrite =>
-      val serialized = atomicWrite.payload.map(serializer.serialize)
+      // Since all PersistentRepr are persisted atomically they all get the same timestamp
+      val now = System.currentTimeMillis()
+      val serialized = atomicWrite.payload.map(pr => serializer.serialize(pr.withTimestamp(now)))
       TrySeq.flatten(serialized)
     }
 
@@ -38,7 +40,7 @@ trait JournalLogic {
     val pid = messages.head.persistenceId
 
     val future = Source(List(entriesToWrite))
-        .flatMapConcat(events => dao.writeEvents(events) )
+        .flatMapConcat(events => dao.writeEvents(events))
         .map(_ => ())
         .runWith(Sink.last[Unit])
 
