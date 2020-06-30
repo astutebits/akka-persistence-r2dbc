@@ -82,9 +82,9 @@ final class EventsByPersistenceIdStageSpec
   it should "fetch the current events if 'refreshInterval' is not specified and the subset is" in {
     val pId = "foo"
     val events = List(
-      JournalEntry(1, false, pId, 1, "test-value".getBytes, Set("FooEvent")),
-      JournalEntry(3, false, pId, 2, "test-value-2".getBytes, Set("FooEvent")),
-      JournalEntry(5, false, pId, 3, "test-value-3".getBytes, Set("FooEvent"))
+      JournalEntry(1, pId, 1, "test-value".getBytes, Set("FooEvent")),
+      JournalEntry(3, pId, 2, "test-value-2".getBytes, Set("FooEvent")),
+      JournalEntry(5, pId, 3, "test-value-3".getBytes, Set("FooEvent"))
     )
 
     dao.findHighestSeq(pId) returns Source.single(3)
@@ -102,9 +102,9 @@ final class EventsByPersistenceIdStageSpec
   it should "pick the real toSeqNr regardless of the user input when fetching current events" in {
     val pId = "foo"
     val events = List(
-      JournalEntry(1, false, pId, 1, "test-value".getBytes, Set("FooEvent")),
-      JournalEntry(3, false, pId, 2, "test-value-2".getBytes, Set("FooEvent")),
-      JournalEntry(5, false, pId, 3, "test-value-3".getBytes, Set("FooEvent"))
+      JournalEntry(1, pId, 1, "test-value".getBytes, Set("FooEvent")),
+      JournalEntry(3, pId, 2, "test-value-2".getBytes, Set("FooEvent")),
+      JournalEntry(5, pId, 3, "test-value-3".getBytes, Set("FooEvent"))
     )
 
     dao.findHighestSeq(pId) returns Source.single(3)
@@ -122,13 +122,13 @@ final class EventsByPersistenceIdStageSpec
   it should "fetch events until the given subset is returned if 'refreshInterval' is defined" in {
     val pId = "foo"
     val firstSet = Seq(
-      JournalEntry(1, false, pId, 1, "test-value".getBytes, Set("FooEvent")),
-      JournalEntry(3, false, pId, 2, "test-value-2".getBytes, Set("FooEvent")),
-      JournalEntry(5, false, pId, 3, "test-value-3".getBytes, Set("FooEvent"))
+      JournalEntry(1, pId, 1, "test-value".getBytes, Set("FooEvent")),
+      JournalEntry(3, pId, 2, "test-value-2".getBytes, Set("FooEvent")),
+      JournalEntry(5, pId, 3, "test-value-3".getBytes, Set("FooEvent"))
     )
     val secondSet = Seq(
-      JournalEntry(7, false, pId, 4, "test-value-4".getBytes, Set("FooEvent")),
-      JournalEntry(9, false, pId, 5, "test-value-5".getBytes, Set("FooEvent"))
+      JournalEntry(7, pId, 4, "test-value-4".getBytes, Set("FooEvent")),
+      JournalEntry(9, pId, 5, "test-value-5".getBytes, Set("FooEvent"))
     )
 
     dao.findHighestSeq(pId) returns Source.single(3) andThen Source.single(5)
@@ -149,13 +149,13 @@ final class EventsByPersistenceIdStageSpec
   it should "fetch events indefinitely when refreshInterval is specified" in {
     val pId = "foo"
     val firstSet = Seq(
-      JournalEntry(1, false, pId, 1, "test-value".getBytes, Set("FooEvent")),
-      JournalEntry(3, false, pId, 2, "test-value-2".getBytes, Set("FooEvent")),
-      JournalEntry(5, false, pId, 3, "test-value-3".getBytes, Set("FooEvent"))
+      JournalEntry(1, pId, 1, "test-value".getBytes, Set("FooEvent")),
+      JournalEntry(3, pId, 2, "test-value-2".getBytes, Set("FooEvent")),
+      JournalEntry(5, pId, 3, "test-value-3".getBytes, Set("FooEvent"))
     )
     val secondSet = Seq(
-      JournalEntry(7, false, pId, 4, "test-value-4".getBytes, Set("FooEvent")),
-      JournalEntry(9, false, pId, 5, "test-value-5".getBytes, Set("FooEvent"))
+      JournalEntry(7, pId, 4, "test-value-4".getBytes, Set("FooEvent")),
+      JournalEntry(9, pId, 5, "test-value-5".getBytes, Set("FooEvent"))
     )
 
     dao.findHighestSeq(pId) returns Source.single(3) andThen Source.single(5)

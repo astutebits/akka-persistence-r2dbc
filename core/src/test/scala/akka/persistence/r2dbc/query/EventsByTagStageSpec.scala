@@ -63,9 +63,9 @@ final class EventsByTagStageSpec
 
   it should "fetch the current events if 'refreshInterval' is not specified" in {
     val events = List(
-      JournalEntry(1, false, "foo", 1, "test-value".getBytes, Set("FooEvent")),
-      JournalEntry(3, false, "foo", 2, "test-value-2".getBytes, Set("FooEvent")),
-      JournalEntry(5, false, "foo", 3, "test-value-3".getBytes, Set("FooEvent"))
+      JournalEntry(1, "foo", 1, "test-value".getBytes, Set("FooEvent")),
+      JournalEntry(3, "foo", 2, "test-value-2".getBytes, Set("FooEvent")),
+      JournalEntry(5, "foo", 3, "test-value-3".getBytes, Set("FooEvent"))
     )
 
     dao.findHighestIndex("FooEvent") returns Source.single(5)
@@ -92,12 +92,12 @@ final class EventsByTagStageSpec
 
   it should "fetch events indefinitely if 'refreshInterval' is specified" in {
     val firstSet = Seq(
-      JournalEntry(1, false, "foo", 1, "test-value".getBytes, Set("FooEvent")),
-      JournalEntry(3, false, "foo", 2, "test-value-2".getBytes, Set("FooEvent")),
-      JournalEntry(5, false, "foo", 3, "test-value-3".getBytes, Set("FooEvent"))
+      JournalEntry(1, "foo", 1, "test-value".getBytes, Set("FooEvent")),
+      JournalEntry(3, "foo", 2, "test-value-2".getBytes, Set("FooEvent")),
+      JournalEntry(5, "foo", 3, "test-value-3".getBytes, Set("FooEvent"))
     )
     val secondSet = Seq(
-      JournalEntry(7, false, "foo", 4, "test-value-4".getBytes, Set("FooEvent"))
+      JournalEntry(7, "foo", 4, "test-value-4".getBytes, Set("FooEvent"))
     )
 
     dao.findHighestIndex("FooEvent") returns Source.single(5) andThen Source.single(7)
@@ -134,9 +134,9 @@ final class EventsByTagStageSpec
 
   it should "fail the stage if the 'findHighestIndex' DAO call fails" in {
     val firstSet = Seq(
-      JournalEntry(1, false, "foo", 1, "test-value".getBytes, Set("FooEvent")),
-      JournalEntry(3, false, "foo", 2, "test-value-2".getBytes, Set("FooEvent")),
-      JournalEntry(5, false, "foo", 3, "test-value-3".getBytes, Set("FooEvent"))
+      JournalEntry(1, "foo", 1, "test-value".getBytes, Set("FooEvent")),
+      JournalEntry(3, "foo", 2, "test-value-2".getBytes, Set("FooEvent")),
+      JournalEntry(5, "foo", 3, "test-value-3".getBytes, Set("FooEvent"))
     )
 
     dao.findHighestIndex("FooEvent") returns Source.single(5) andThen Source.failed(new IllegalStateException("Boom"))
@@ -157,9 +157,9 @@ final class EventsByTagStageSpec
 
   it should "fail the stage if the 'fetchByTag' DAO call fails" in {
     val firstSet = Seq(
-      JournalEntry(1, false, "foo", 1, "test-value".getBytes, Set("FooEvent")),
-      JournalEntry(3, false, "foo", 2, "test-value-2".getBytes, Set("FooEvent")),
-      JournalEntry(5, false, "foo", 3, "test-value-3".getBytes, Set("FooEvent"))
+      JournalEntry(1, "foo", 1, "test-value".getBytes, Set("FooEvent")),
+      JournalEntry(3, "foo", 2, "test-value-2".getBytes, Set("FooEvent")),
+      JournalEntry(5, "foo", 3, "test-value-3".getBytes, Set("FooEvent"))
     )
 
     dao.findHighestIndex("FooEvent") returns Source.single(5) andThen Source.single(7)
