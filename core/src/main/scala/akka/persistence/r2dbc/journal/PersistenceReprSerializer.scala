@@ -21,18 +21,19 @@ private[akka] final class PersistenceReprSerializer(serialization: Serialization
 
   def serialize(persistentRepr: PersistentRepr): Try[JournalEntry] = serialization
       .serialize(persistentRepr.payload match {
-        case Tagged(payload, _)  => persistentRepr.withPayload(payload)
+        case Tagged(payload, _) => persistentRepr.withPayload(payload)
         case _ => persistentRepr
       })
-      .map(bytes => {
+      .map(bytes =>
         JournalEntry(
           Long.MinValue,
-          persistentRepr.deleted,
           persistentRepr.persistenceId,
           persistentRepr.sequenceNr,
           bytes,
-          encodeTags(persistentRepr.payload))
-      })
+          encodeTags(persistentRepr.payload),
+          persistentRepr.deleted
+        )
+      )
 
   def deserialize(entry: JournalEntry): Try[PersistentRepr] = serialization
       .deserialize(entry.event, classOf[PersistentRepr])
