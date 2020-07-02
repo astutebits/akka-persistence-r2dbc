@@ -61,7 +61,9 @@ final class EventsByTagSpec extends PersistenceQuerySpec {
     readJournal.currentEventsByTag(pId, NoOffset)
         .map(envelope => (envelope.sequenceNr, envelope.event))
         .runWith(TestSink.probe[(Long, Any)])
-        .request(4)
+        .request(5)
+        .expectNextN(expectedEvents(pId, 1, 4))
+        .expectComplete()
 
     writeMessages(5, 5, pId, writerUuid, Set(pId))
   }
