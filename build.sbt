@@ -28,7 +28,7 @@ lazy val root = (project in file("."))
       // We are only using DockerCompose for testing.
       dockerImageCreationTask := ""
     )
-    .aggregate(postgresql, core)
+    .aggregate(postgresql, mysql, core)
 
 lazy val core = Project(id = "core", base = file("core"))
     .settings(
@@ -41,7 +41,18 @@ lazy val core = Project(id = "core", base = file("core"))
 lazy val postgresql = Project(id = "postgresql", base = file("postgresql"))
     .settings(
       name := "akka-persistence-postgresql",
-      libraryDependencies ++= Dependencies.Libraries
+      libraryDependencies ++= Dependencies.PostgreSQL
+    )
+    .settings(
+      fork in Test := true,
+      parallelExecution in Test := false
+    )
+    .dependsOn(core)
+
+lazy val mysql = Project(id = "mysql", base = file("mysql"))
+    .settings(
+      name := "akka-persistence-mysql",
+      libraryDependencies ++= Dependencies.MySQL
     )
     .settings(
       fork in Test := true,
