@@ -53,12 +53,13 @@ final class AllPersistenceIdSpec
 
     val probe = readJournal.currentPersistenceIds()
         .runWith(TestSink.probe)
+        .request(2)
+        .expectNext("foo", "bar")
 
     writeMessages(1, 5, "baz", writerUuid)
 
     probe
-        .request(10)
-        .expectNext("foo", "bar")
+        .request(5)
         .expectComplete()
   }
 
