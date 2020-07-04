@@ -24,7 +24,7 @@ object Dependencies {
     "ch.qos.logback" % "logback-classic" % "1.2.3" % Test
   )
 
-  val Libraries = Seq(
+  private val Libraries = Seq(
     "com.typesafe.akka" %% "akka-persistence-query" % Versions.akka,
 
     "ch.qos.logback" % "logback-classic" % "1.2.3" % Test,
@@ -41,4 +41,8 @@ object Dependencies {
     "dev.miku" % "r2dbc-mysql" % "0.8.1.RELEASE"
   )
 
+  val Perf: Seq[ModuleID] = Libraries ++ Seq(
+    "io.r2dbc" % "r2dbc-postgresql" % Versions.r2dbc,
+    "dev.miku" % "r2dbc-mysql" % "0.8.1.RELEASE"
+  )
 }

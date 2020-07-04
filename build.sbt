@@ -64,8 +64,8 @@ lazy val `perf-tests` = Project(id = "perf-tests", base = file("perf-tests"))
     .settings(
       name := "akka-persistence-r2dbc-perf-tests",
       skip in publish := true,
-      libraryDependencies ++= Dependencies.Libraries
+      libraryDependencies ++= Dependencies.Perf
     )
     .settings(fork in Test := true)
-    .dependsOn(postgresql)
+    .dependsOn(postgresql, mysql)
 
