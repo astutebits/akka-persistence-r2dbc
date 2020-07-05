@@ -60,6 +60,18 @@ lazy val mysql = Project(id = "mysql", base = file("mysql"))
     )
     .dependsOn(core)
 
+lazy val tck = Project(id = "tck", base = file("tck"))
+    .settings(
+      name := "akka-persistence-tck",
+      skip in publish := true,
+      libraryDependencies ++= Dependencies.TCK
+    )
+    .settings(
+      fork in Test := true,
+      parallelExecution in Test := false
+    )
+    .dependsOn(core)
+
 lazy val `perf-tests` = Project(id = "perf-tests", base = file("perf-tests"))
     .settings(
       name := "akka-persistence-r2dbc-perf-tests",
