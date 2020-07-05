@@ -41,6 +41,12 @@ object Dependencies {
     "dev.miku" % "r2dbc-mysql" % "0.8.1.RELEASE"
   )
 
+  val TCK: Seq[ModuleID] = Seq(
+    "com.typesafe.akka" %% "akka-persistence-query" % Versions.akka,
+    "org.scalatest" %% "scalatest" % Versions.scalaTest ,
+    "com.typesafe.akka" %% "akka-stream-testkit" % Versions.akka
+  )
+
   val Perf: Seq[ModuleID] = Libraries ++ Seq(
     "io.r2dbc" % "r2dbc-postgresql" % Versions.r2dbc,
     "dev.miku" % "r2dbc-mysql" % "0.8.1.RELEASE"
