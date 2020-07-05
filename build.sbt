@@ -58,7 +58,7 @@ lazy val mysql = Project(id = "mysql", base = file("mysql"))
       fork in Test := true,
       parallelExecution in Test := false
     )
-    .dependsOn(core)
+    .dependsOn(core, tck)
 
 lazy val tck = Project(id = "tck", base = file("tck"))
     .settings(
