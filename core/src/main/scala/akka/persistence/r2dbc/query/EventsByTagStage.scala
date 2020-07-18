@@ -39,7 +39,7 @@ private[akka] final class EventsByTagStage private(
 
   override protected def pushedEntry(entry: JournalEntry): Unit = {
     processedEntries += 1
-    currentIndex = entry.index
+    currentIndex = entry.id
   }
 
   override protected def fetchEvents(): Source[JournalEntry, NotUsed] =

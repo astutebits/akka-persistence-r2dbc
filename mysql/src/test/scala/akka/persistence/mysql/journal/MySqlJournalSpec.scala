@@ -30,7 +30,7 @@ final class MySqlJournalSpec
             .build())
       )
       r2dbc.withHandle(handle =>
-        handle.executeQuery("DELETE FROM journal_event; DELETE FROM event_tag;", _.getRowsUpdated)
+        handle.executeQuery("DELETE FROM event; DELETE FROM tag;", _.getRowsUpdated)
       )
           .blockLast()
     }

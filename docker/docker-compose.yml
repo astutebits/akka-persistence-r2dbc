@@ -19,7 +19,7 @@ services:
       POSTGRES_PASSWORD: s3cr3t
       POSTGRES_DB: db
     volumes:
-      - ./postgres-schema.sql:/docker-entrypoint-initdb.d/1000_postgres-schema.sql
+      - ./postgresql-schema.sql:/docker-entrypoint-initdb.d/1000_postgres-schema.sql
     ports:
       - 5432:5432
     networks:

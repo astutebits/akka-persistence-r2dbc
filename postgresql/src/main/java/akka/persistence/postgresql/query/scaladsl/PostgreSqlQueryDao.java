@@ -1,10 +1,10 @@
-package akka.persistence.mysql.query.scaladsl;
+package akka.persistence.postgresql.query.scaladsl;
 
-import static akka.persistence.mysql.query.scaladsl.MySqlReadJournalQueries.fetchByPersistenceIdQuery;
-import static akka.persistence.mysql.query.scaladsl.MySqlReadJournalQueries.fetchByTagQuery;
-import static akka.persistence.mysql.query.scaladsl.MySqlReadJournalQueries.fetchPersistenceIdsQuery;
-import static akka.persistence.mysql.query.scaladsl.MySqlReadJournalQueries.findHighestIndexQuery;
-import static akka.persistence.mysql.query.scaladsl.MySqlReadJournalQueries.findHighestSeqQuery;
+import static akka.persistence.postgresql.query.PostgreSqlReadJournalStatements.fetchByPersistenceIdQuery;
+import static akka.persistence.postgresql.query.PostgreSqlReadJournalStatements.fetchByTagQuery;
+import static akka.persistence.postgresql.query.PostgreSqlReadJournalStatements.fetchPersistenceIdsQuery;
+import static akka.persistence.postgresql.query.PostgreSqlReadJournalStatements.findHighestIndexQuery;
+import static akka.persistence.postgresql.query.PostgreSqlReadJournalStatements.findHighestSeqQuery;
 
 import akka.NotUsed;
 import akka.persistence.r2dbc.client.R2dbc;
@@ -15,11 +15,11 @@ import akka.stream.scaladsl.Source;
 import reactor.core.publisher.Flux;
 import scala.Tuple2;
 
-final class MySqlQueryDao extends AbstractQueryDao {
+final class PostgreSqlQueryDao extends AbstractQueryDao {
 
   private final R2dbc r2dbc;
 
-  public MySqlQueryDao(R2dbc r2dbc) {
+  public PostgreSqlQueryDao(R2dbc r2dbc) {
     this.r2dbc = r2dbc;
   }
 
@@ -44,9 +44,9 @@ final class MySqlQueryDao extends AbstractQueryDao {
   }
 
   @Override
-  public Source<JournalEntry, NotUsed> doFetchByTag(String tag, Long fromSeqNr, Long toSeqNr) {
+  public Source<JournalEntry, NotUsed> doFetchByTag(String tag, Long fromIndex, Long toIndex) {
     Flux<JournalEntry> flux = r2dbc.withHandle(handle -> handle.executeQuery(
-        fetchByTagQuery(tag, fromSeqNr, toSeqNr), ResultUtils::toJournalEntry
+        fetchByTagQuery(tag, fromIndex, toIndex), ResultUtils::toJournalEntry
     ));
     return Source.fromPublisher(flux);
   }

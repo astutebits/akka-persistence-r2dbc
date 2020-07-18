@@ -1,16 +1,16 @@
 package akka.persistence.postgresql.query.scaladsl
 
 import akka.actor.ExtendedActorSystem
-import akka.persistence.postgresql.journal.PostgresqlPluginConfig
+import akka.persistence.postgresql.journal.PostgreSqlPluginConfig
 import akka.persistence.r2dbc.client.R2dbc
 import akka.persistence.r2dbc.query.{QueryDao, ReactiveReadJournal}
 import com.typesafe.config.Config
 import io.r2dbc.postgresql.{PostgresqlConnectionConfiguration, PostgresqlConnectionFactory}
 
-object PostgresqlReadJournal {
+object PostgreSqlReadJournal {
 
   /**
-   * The default identifier for [[PostgresqlReadJournal]] to be used with
+   * The default identifier for [[PostgreSqlReadJournal]] to be used with
    * `akka.persistence.query.PersistenceQuery#readJournalFor`.
    *
    * The value is `"postgresql-read-journal"` and corresponds
@@ -29,16 +29,16 @@ object PostgresqlReadJournal {
  * val readJournal = PersistenceQuery(system).readJournalFor[PostgresqlReadJournal](PostgresqlReadJournal.Identifier)
  * }}}
  *
- * Corresponding Java API is in [[akka.persistence.postgresql.query.javadsl.PostgresqlReadJournal]].
+ * Corresponding Java API is in [[akka.persistence.postgresql.query.javadsl.PostgreSqlReadJournal]].
  *
  * Configuration settings can be defined in the configuration section with the
  * absolute path corresponding to the identifier, which is `"postgresql-read-journal"`
- * for the default [[PostgresqlReadJournal#Identifier]]. See `reference.conf`.
+ * for the default [[PostgreSqlReadJournal#Identifier]]. See `reference.conf`.
  */
-final class PostgresqlReadJournal(val system: ExtendedActorSystem, config: Config)
+final class PostgreSqlReadJournal(val system: ExtendedActorSystem, config: Config)
     extends ReactiveReadJournal {
 
-  private val pluginConfig = PostgresqlPluginConfig(system.settings.config.getConfig(config.getString("journal-plugin")))
+  private val pluginConfig = PostgreSqlPluginConfig(system.settings.config.getConfig(config.getString("journal-plugin")))
   private val factory = new PostgresqlConnectionFactory(
     PostgresqlConnectionConfiguration.builder()
         .host(pluginConfig.hostname)
@@ -47,6 +47,6 @@ final class PostgresqlReadJournal(val system: ExtendedActorSystem, config: Confi
         .database(pluginConfig.database)
         .build())
 
-  override protected val dao: QueryDao = new PostgresqlQueryDao(new R2dbc(factory))
+  override protected val dao: QueryDao = new PostgreSqlQueryDao(new R2dbc(factory))
 
 }
