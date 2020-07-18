@@ -12,7 +12,7 @@ import io.r2dbc.spi.Result;
 import org.reactivestreams.Publisher;
 import reactor.core.publisher.Flux;
 
-public final class PostgresqlSnapshotStoreDao extends AbstractSnapshotStoreDao {
+public final class PostgreSqlSnapshotStoreDao extends AbstractSnapshotStoreDao {
 
   private static String selectionCriteria(SnapshotSelectionCriteria criteria) {
     String query = "";
@@ -78,7 +78,7 @@ public final class PostgresqlSnapshotStoreDao extends AbstractSnapshotStoreDao {
 
   private final R2dbc r2dbc;
 
-  public PostgresqlSnapshotStoreDao(R2dbc r2dbc) {
+  public PostgreSqlSnapshotStoreDao(R2dbc r2dbc) {
     this.r2dbc = r2dbc;
   }
 
@@ -89,7 +89,7 @@ public final class PostgresqlSnapshotStoreDao extends AbstractSnapshotStoreDao {
   ) {
     Flux<SnapshotEntry> flux = r2dbc.withHandle(handle -> handle.executeQuery(
         fetchSnapshotQuery(persistenceId, criteria),
-        PostgresqlSnapshotStoreDao::entryOf
+        PostgreSqlSnapshotStoreDao::entryOf
     ));
     return Source.fromPublisher(flux);
   }

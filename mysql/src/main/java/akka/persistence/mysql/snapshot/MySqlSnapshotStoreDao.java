@@ -1,8 +1,8 @@
 package akka.persistence.mysql.snapshot;
 
-import static akka.persistence.mysql.snapshot.SnapshotStoreQueries.deleteSnapshotQuery;
-import static akka.persistence.mysql.snapshot.SnapshotStoreQueries.fetchSnapshotQuery;
-import static akka.persistence.mysql.snapshot.SnapshotStoreQueries.upsertSnapshotQuery;
+import static akka.persistence.mysql.snapshot.MySqlSnapshotStoreQueries.deleteSnapshotQuery;
+import static akka.persistence.mysql.snapshot.MySqlSnapshotStoreQueries.fetchSnapshotQuery;
+import static akka.persistence.mysql.snapshot.MySqlSnapshotStoreQueries.upsertSnapshotQuery;
 
 import akka.NotUsed;
 import akka.persistence.SnapshotSelectionCriteria;

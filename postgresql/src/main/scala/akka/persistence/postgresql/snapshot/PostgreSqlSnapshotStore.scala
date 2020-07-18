@@ -6,7 +6,7 @@ import akka.persistence.r2dbc.snapshot.{ReactiveSnapshotStore, SnapshotStoreDao}
 import com.typesafe.config.Config
 import io.r2dbc.postgresql.{PostgresqlConnectionConfiguration, PostgresqlConnectionFactory}
 
-final class PostgresqlSnapshotStore(config: Config) extends ReactiveSnapshotStore {
+final class PostgreSqlSnapshotStore(config: Config) extends ReactiveSnapshotStore {
 
   private val storeConfig = SnapshotStoreConfig(config)
   private val factory = new PostgresqlConnectionFactory(PostgresqlConnectionConfiguration.builder()
@@ -18,6 +18,6 @@ final class PostgresqlSnapshotStore(config: Config) extends ReactiveSnapshotStor
 
   override protected val system: ActorSystem = context.system
 
-  override protected val dao: SnapshotStoreDao = new PostgresqlSnapshotStoreDao(new R2dbc(factory))
+  override protected val dao: SnapshotStoreDao = new PostgreSqlSnapshotStoreDao(new R2dbc(factory))
 
 }

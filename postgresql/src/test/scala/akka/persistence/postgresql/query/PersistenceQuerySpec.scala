@@ -3,7 +3,7 @@ package akka.persistence.postgresql.query
 import akka.actor.{ActorRef, ActorSystem}
 import akka.persistence.JournalProtocol.{WriteMessageSuccess, WriteMessages, WriteMessagesSuccessful}
 import akka.persistence.journal.Tagged
-import akka.persistence.postgresql.query.scaladsl.PostgresqlReadJournal
+import akka.persistence.postgresql.query.scaladsl.PostgreSqlReadJournal
 import akka.persistence.query.PersistenceQuery
 import akka.persistence.r2dbc.client.R2dbc
 import akka.persistence.{AtomicWrite, Persistence, PersistentImpl, PersistentRepr}
@@ -35,8 +35,8 @@ trait PersistenceQuerySpec
   protected implicit val mat: Materializer = Materializer(system)
 
   protected val actorInstanceId = 1
-  protected val readJournal: PostgresqlReadJournal = PersistenceQuery(system)
-      .readJournalFor[PostgresqlReadJournal](PostgresqlReadJournal.Identifier)
+  protected val readJournal: PostgreSqlReadJournal = PersistenceQuery(system)
+      .readJournalFor[PostgreSqlReadJournal](PostgreSqlReadJournal.Identifier)
 
   private val senderProbe: TestProbe = TestProbe()
   private val journal: ActorRef = Persistence(system).journalFor(null)
@@ -90,7 +90,7 @@ trait PersistenceQuerySpec
   protected def deleteEvents(): Unit = {
     eventually(timeout(60.seconds), interval(1.second)) {
       r2dbc.withHandle(handle => handle.executeQuery(
-        "DELETE FROM journal_event; DELETE FROM tag;", _.getRowsUpdated()
+        "DELETE FROM event; DELETE FROM tag;", _.getRowsUpdated()
       ))
           .blockLast()
     }
