@@ -1,12 +1,12 @@
-package akka.persistence.mysql.journal;
+package akka.persistence.postgresql.journal;
 
-import static akka.persistence.mysql.journal.MySqlJournalQueries.deleteEventsQuery;
-import static akka.persistence.mysql.journal.MySqlJournalQueries.findEventsQuery;
-import static akka.persistence.mysql.journal.MySqlJournalQueries.highestMarkedSeqNrQuery;
-import static akka.persistence.mysql.journal.MySqlJournalQueries.highestSeqNrQuery;
-import static akka.persistence.mysql.journal.MySqlJournalQueries.insertEventsQuery;
-import static akka.persistence.mysql.journal.MySqlJournalQueries.insertTagsQuery;
-import static akka.persistence.mysql.journal.MySqlJournalQueries.markEventsAsDeletedQuery;
+import static akka.persistence.postgresql.journal.PostgreSqlJournalQueries.deleteEventsQuery;
+import static akka.persistence.postgresql.journal.PostgreSqlJournalQueries.findEventsQuery;
+import static akka.persistence.postgresql.journal.PostgreSqlJournalQueries.highestMarkedSeqNrQuery;
+import static akka.persistence.postgresql.journal.PostgreSqlJournalQueries.highestSeqNrQuery;
+import static akka.persistence.postgresql.journal.PostgreSqlJournalQueries.insertEventsQuery;
+import static akka.persistence.postgresql.journal.PostgreSqlJournalQueries.insertTagsQuery;
+import static akka.persistence.postgresql.journal.PostgreSqlJournalQueries.markEventsAsDeletedQuery;
 import static akka.persistence.r2dbc.journal.ResultUtils.toSeqId;
 
 import akka.NotUsed;
@@ -19,44 +19,34 @@ import akka.persistence.r2dbc.journal.ResultUtils;
 import akka.stream.scaladsl.Source;
 import io.r2dbc.spi.Result;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 import org.reactivestreams.Publisher;
 import reactor.core.publisher.Flux;
 import reactor.util.function.Tuple2;
-import reactor.util.function.Tuples;
 import scala.jdk.javaapi.CollectionConverters;
 
 /**
- * A {@link JournalDao} for MySQL with <strong>r2dbc-mysql</strong>
+ * A {@link JournalDao} for PostgreSQL with <strong>r2dbc-postgresql</strong>
  *
- * @see <a href="https://github.com/mirromutth/r2dbc-mysql">r2dbc-mysql</a>
+ * @see <a href="https://github.com/r2dbc/r2dbc-postgresql">r2dbc-postgresql</a>
  */
-final class MySqlJournalDao extends AbstractJournalDao {
-
-  private static final String LAST_ID = "LAST_INSERT_ID()";
-
-  private static Publisher<Long> lastId(Result result) {
-    return result.map((row, metadata) -> row.get(LAST_ID, Long.class));
-  }
+final class PostgreSqlJournalDao extends AbstractJournalDao {
 
   private final R2dbc r2dbc;
 
-  public MySqlJournalDao(R2dbc r2dbc) {
+  public PostgreSqlJournalDao(R2dbc r2dbc) {
     this.r2dbc = r2dbc;
   }
 
   @Override
   public Source<Integer, NotUsed> doWriteEvents(List<JournalEntry> events) {
     Flux<Integer> flux = r2dbc.inTransaction(handle ->
-        handle.executeQuery(insertEventsQuery(events), Result::getRowsUpdated)
-            .thenMany(handle.executeQuery("SELECT " + LAST_ID, MySqlJournalDao::lastId))
-            .flatMap(idx -> {
-              AtomicLong index = new AtomicLong(idx);
-              return Flux.fromStream(events.stream().map(entry ->
-                  Tuples.of(index.getAndIncrement(), CollectionConverters.asJava(entry.tags())))
-              );
-            })
+        handle.executeQuery(insertEventsQuery(events), result -> ResultUtils.toSeqId(result, "id"))
+            .zipWithIterable(events.stream()
+                .map(event -> CollectionConverters.asJava(event.tags()))
+                .collect(Collectors.toList())
+            )
             .collectList()
             .filter(x -> x.stream().map(Tuple2::getT2).anyMatch(z -> !z.isEmpty()))
             .flatMapMany(eventTags ->
@@ -68,10 +58,7 @@ final class MySqlJournalDao extends AbstractJournalDao {
 
   @Override
   public Source<JournalEntry, NotUsed> doFetchEvents(
-      String persistenceId,
-      Long fromSeqNr,
-      Long toSeqNr,
-      Long max
+      String persistenceId, Long fromSeqNr, Long toSeqNr, Long max
   ) {
     Function<Handle, Publisher<JournalEntry>> findEvents = handle -> handle.executeQuery(
         findEventsQuery(persistenceId, fromSeqNr, toSeqNr, max), ResultUtils::toJournalEntry

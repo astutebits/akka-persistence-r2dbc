@@ -1,13 +1,27 @@
+package akka.persistence.postgresql.journal
+
 import akka.persistence.CapabilityFlag
-import akka.persistence.journal.JournalPerfSpec
-import com.typesafe.config.{Config, ConfigFactory}
+import akka.persistence.journal.JournalSpec
+import com.typesafe.config.ConfigFactory
 import io.r2dbc.postgresql.{PostgresqlConnectionConfiguration, PostgresqlConnectionFactory}
 import org.scalatest.concurrent.Eventually
 import reactor.core.publisher.{Flux, Mono}
 import scala.concurrent.duration._
 
-final class PostgresqlJournalPerfSpec
-    extends JournalPerfSpec(config = PostgresqlJournalPerfSpec.PluginConfig)
+object PostgreSqlJournalSpec {
+
+  private val JournalPluginConfig = ConfigFactory.parseString(
+    """
+      |akka.persistence.journal.plugin = "postgresql-journal"
+      |akka.loglevel = "DEBUG"
+      |""".stripMargin)
+}
+
+/**
+ * Test case for [[PostgreSqlJournal]].
+ */
+final class PostgreSqlJournalSpec
+    extends JournalSpec(config = PostgreSqlJournalSpec.JournalPluginConfig)
         with Eventually {
 
   override def beforeAll(): Unit = {
@@ -20,7 +34,7 @@ final class PostgresqlJournalPerfSpec
           .build())
       cf.create.flatMapMany(connection => {
         connection.createBatch()
-            .add("DELETE FROM journal_event")
+            .add("DELETE FROM event")
             .add("DELETE FROM tag")
             .execute().flatMap(_.getRowsUpdated())
             .concatWith(Flux.from(connection.close).`then`(Mono.empty()))
@@ -32,16 +46,6 @@ final class PostgresqlJournalPerfSpec
     super.beforeAll()
   }
 
-  override def eventsCount: Int = 1000
-
-  override def awaitDurationMillis: Long = 1.minutes.toMillis
-
   override protected def supportsRejectingNonSerializableObjects: CapabilityFlag = true
 
-}
-object PostgresqlJournalPerfSpec {
-  val PluginConfig: Config = ConfigFactory.parseString(
-    """
-      |akka.persistence.journal.plugin = "postgresql-journal"
-      |""".stripMargin)
 }

@@ -127,8 +127,8 @@ final class ReactiveJournalSpec
 
   it should "replay messages as requested" in {
     mockDao.fetchEvents("foo", 1, 2, 2) returns Source(
-      Seq(journal.serializer.serialize(PersistentRepr(Tagged("foo", Set("FooTag", "FooTagTwo")), 1L, "foo")).map(_.copy(index = 1L)),
-        journal.serializer.serialize(PersistentRepr(Tagged("foo", Set("FooTag", "FooTagTwo")), 2L, "foo")).map(_.copy(index = 5L)))
+      Seq(journal.serializer.serialize(PersistentRepr(Tagged("foo", Set("FooTag", "FooTagTwo")), 1L, "foo")).map(_.copy(id = 1L)),
+        journal.serializer.serialize(PersistentRepr(Tagged("foo", Set("FooTag", "FooTagTwo")), 2L, "foo")).map(_.copy(id = 5L)))
     )
         .map(_.get)
 

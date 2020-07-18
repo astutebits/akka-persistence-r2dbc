@@ -6,10 +6,10 @@ import akka.persistence.r2dbc.journal.{JournalDao, ReactiveJournal}
 import com.typesafe.config.Config
 import io.r2dbc.postgresql.{PostgresqlConnectionConfiguration, PostgresqlConnectionFactory}
 
-class PostgresqlJournal(config: Config)
+private[akka] final class PostgreSqlJournal(config: Config)
     extends ReactiveJournal {
 
-  private val pluginConfig = PostgresqlPluginConfig(config)
+  private val pluginConfig = PostgreSqlPluginConfig(config)
   private val factory = new PostgresqlConnectionFactory(
     PostgresqlConnectionConfiguration.builder()
         .host(pluginConfig.hostname)
@@ -19,6 +19,6 @@ class PostgresqlJournal(config: Config)
         .build())
 
   override implicit val system: ActorSystem = context.system
-  override protected val dao: JournalDao = new PostgresqlJournalDao(new R2dbc(factory))
+  override protected val dao: JournalDao = new PostgreSqlJournalDao(new R2dbc(factory))
 
 }

@@ -5,7 +5,7 @@ import akka.persistence.r2dbc.snapshot.SnapshotEntry
 import io.netty.buffer.ByteBufUtil
 import java.lang.{Long => JLong}
 
-private[akka] object SnapshotStoreQueries {
+private[akka] object MySqlSnapshotStoreQueries {
 
   private def selectionCriteria(criteria: SnapshotSelectionCriteria) = {
     var query = ""

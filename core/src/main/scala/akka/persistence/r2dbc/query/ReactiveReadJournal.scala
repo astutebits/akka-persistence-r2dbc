@@ -72,7 +72,7 @@ trait ReactiveReadJournal
 
   private[this] def mapEntries(source: Source[JournalEntry, NotUsed]): Source[EventEnvelope, NotUsed] =
     source
-        .map(entry => serializer.deserialize(entry).map((entry.index, _)))
+        .map(entry => serializer.deserialize(entry).map((entry.id, _)))
         .mapAsync(1)(Future.fromTry)
         .map {
           case (index, repr) =>

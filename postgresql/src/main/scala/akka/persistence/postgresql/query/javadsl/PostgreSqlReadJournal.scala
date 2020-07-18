@@ -1,15 +1,15 @@
 package akka.persistence.postgresql.query.javadsl
 
 import akka.NotUsed
-import akka.persistence.postgresql.query.scaladsl.{PostgresqlReadJournal => ScalaPostgresqlReadJournal}
+import akka.persistence.postgresql.query.scaladsl.{PostgreSqlReadJournal => ScalaPostgresqlReadJournal}
 import akka.persistence.query.javadsl._
 import akka.persistence.query.{EventEnvelope, Offset}
 import akka.stream.javadsl.Source
 
-object PostgresqlReadJournal {
+object PostgreSqlReadJournal {
 
   /**
-   * The default identifier for [[PostgresqlReadJournal]] to be used with
+   * The default identifier for [[PostgreSqlReadJournal]] to be used with
    * `akka.persistence.query.PersistenceQuery#getReadJournalFor`.
    *
    * The value is `"postgresql-read-journal"` and corresponds
@@ -28,14 +28,14 @@ object PostgresqlReadJournal {
  *   PersistenceQuery.get(system).getReadJournalFor(PostgresqlReadJournal.class, PostgresqlReadJournal.Identifier());
  * }}}
  *
- * Corresponding Scala API is in [[akka.persistence.postgresql.query.scaladsl.PostgresqlReadJournal]].
+ * Corresponding Scala API is in [[akka.persistence.postgresql.query.scaladsl.PostgreSqlReadJournal]].
  *
  * Configuration settings can be defined in the configuration section with the
  * absolute path corresponding to the identifier, which is `"postgresql-read-journal"`
- * for the default [[PostgresqlReadJournal#Identifier]]. See `reference.conf`.
+ * for the default [[PostgreSqlReadJournal#Identifier]]. See `reference.conf`.
  *
  */
-final class PostgresqlReadJournal(readJournal: ScalaPostgresqlReadJournal)
+final class PostgreSqlReadJournal(readJournal: ScalaPostgresqlReadJournal)
     extends ReadJournal
         with CurrentPersistenceIdsQuery
         with PersistenceIdsQuery
