@@ -11,11 +11,7 @@ import scala.concurrent.duration._
  */
 trait AllPersistenceIdSpec { _: ReadJournalSpec =>
 
-  "Postgresql query currentPersistenceIds" should "implement standard CurrentPersistenceIdsQuery" in {
-    readJournal.isInstanceOf[CurrentPersistenceIdsQuery] should ===(true)
-  }
-
-  it should "return empty if there are none" in {
+  "CurrentPersistenceIdsQuery" should "return empty if there are none" in {
     readJournal.currentPersistenceIds()
         .runWith(TestSink.probe)
         .expectSubscriptionAndComplete()
@@ -77,11 +73,7 @@ trait AllPersistenceIdSpec { _: ReadJournalSpec =>
         .expectComplete()
   }
 
-  "Postgresql query persistenceIds" should "implement standard PersistenceIdsQuery" in {
-    readJournal.isInstanceOf[PersistenceIdsQuery] should ===(true)
-  }
-
-  it should "keep running even if empty" in {
+  "PersistenceIdsQuery" should "keep running even if empty" in {
     readJournal.persistenceIds()
         .runWith(TestSink.probe)
         .request(100)
