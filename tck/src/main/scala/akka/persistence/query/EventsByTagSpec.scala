@@ -10,11 +10,7 @@ import scala.concurrent.duration._
  */
 trait EventsByTagSpec { _: ReadJournalSpec =>
 
-  "Postgresql query currentEventsByTag" should "implement standard CurrentEventsByTagQuery" in {
-    readJournal.isInstanceOf[CurrentEventsByTagQuery] should ===(true)
-  }
-
-  it should "fetch all current events" in {
+  "CurrentEventsByTagQuery" should "fetch all current events" in {
     val pId = "cebt-a"
     val writerUuid = UUID.randomUUID()
 
@@ -113,11 +109,7 @@ trait EventsByTagSpec { _: ReadJournalSpec =>
         .expectSubscriptionAndComplete()
   }
 
-  "Postgresql query eventsByTag" should "implement standard EventsByTagQuery" in {
-    readJournal.isInstanceOf[EventsByTagQuery] should ===(true)
-  }
-
-  it should "keep running even if the tag does not exist yet" in {
+  "EventsByTagQuery" should "keep running even if the tag does not exist yet" in {
     val pId = "ebt-a"
 
     readJournal.eventsByTag(pId, NoOffset)

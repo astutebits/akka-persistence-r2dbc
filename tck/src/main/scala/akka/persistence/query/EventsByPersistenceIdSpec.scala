@@ -10,11 +10,7 @@ import scala.concurrent.duration._
  */
 trait EventsByPersistenceIdSpec { _: ReadJournalSpec =>
 
-  "Postgresql query currentEventsByPersistenceId" should "implement standard CurrentEventsByPersistenceIdQuery" in {
-    readJournal.isInstanceOf[CurrentEventsByPersistenceIdQuery] should ===(true)
-  }
-
-  it should "fetch existing subset of events" in {
+  "CurrentEventsByPersistenceIdQuery" should "fetch existing subset of events" in {
     val pId = "cebp-a"
     val writerUuid = UUID.randomUUID()
 
@@ -118,11 +114,7 @@ trait EventsByPersistenceIdSpec { _: ReadJournalSpec =>
         .expectComplete()
   }
 
-  "Postgresql query eventsByPersistenceId" should "implement standard EventsByPersistenceIdQuery" in {
-    readJournal.isInstanceOf[EventsByPersistenceIdQuery] should ===(true)
-  }
-
-  it should "fetch events indefinitely" in {
+  "EventsByPersistenceIdQuery" should "fetch events indefinitely" in {
     val pId = "ebp-a"
     val writerUuid = UUID.randomUUID()
     writeMessages(1, 3, pId, writerUuid)

@@ -26,7 +26,7 @@ object PostgreSqlReadJournal {
  *
  * It is retrieved with:
  * {{{
- * val readJournal = PersistenceQuery(system).readJournalFor[PostgresqlReadJournal](PostgresqlReadJournal.Identifier)
+ * val readJournal = PersistenceQuery(system).readJournalFor[PostgreSqlReadJournal](PostgreSqlReadJournal.Identifier)
  * }}}
  *
  * Corresponding Java API is in [[akka.persistence.postgresql.query.javadsl.PostgreSqlReadJournal]].

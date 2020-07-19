@@ -47,7 +47,7 @@ lazy val postgresql = Project(id = "postgresql", base = file("postgresql"))
       fork in Test := true,
       parallelExecution in Test := false
     )
-    .dependsOn(core)
+    .dependsOn(core, tck)
 
 lazy val mysql = Project(id = "mysql", base = file("mysql"))
     .settings(
