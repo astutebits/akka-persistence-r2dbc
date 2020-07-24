@@ -5,7 +5,6 @@ import akka.persistence.r2dbc.client.R2dbc
 import com.typesafe.config.ConfigFactory
 import dev.miku.r2dbc.mysql.{MySqlConnectionConfiguration, MySqlConnectionFactory}
 import org.scalatest.concurrent.Eventually
-import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach}
 import scala.concurrent.duration._
 
 object MySqlReadJournalSpec {
@@ -18,13 +17,12 @@ object MySqlReadJournalSpec {
       |""".stripMargin)
 
 }
-class MySqlReadJournalSpec
+final class MySqlReadJournalSpec
     extends ReadJournalSpec(MySqlReadJournalSpec.Config)
         with AllPersistenceIdSpec
         with EventsByTagSpec
         with EventsByPersistenceIdSpec
-        with Eventually
-        with BeforeAndAfterEach {
+        with Eventually {
 
   private val r2dbc = new R2dbc(
     MySqlConnectionFactory.from(MySqlConnectionConfiguration.builder()
@@ -35,15 +33,13 @@ class MySqlReadJournalSpec
         .build())
   )
 
-  override def beforeEach(): Unit = {
+  override def beforeAll(): Unit = {
     eventually(timeout(60.seconds), interval(1.second)) {
-      r2dbc.withHandle(handle =>
-        handle.executeQuery("DELETE FROM event; DELETE FROM tag;", _.getRowsUpdated)
-      )
+      r2dbc.withHandle(_.executeQuery("DELETE FROM event; DELETE FROM tag;", _.getRowsUpdated))
           .blockLast()
     }
 
-    super.beforeEach()
+    super.beforeAll()
   }
 
   override def pluginId: String = "mysql-read-journal"

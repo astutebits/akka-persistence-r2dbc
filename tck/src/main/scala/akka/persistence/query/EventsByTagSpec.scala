@@ -2,7 +2,6 @@ package akka.persistence.query
 
 import akka.persistence.query.scaladsl.{CurrentEventsByTagQuery, EventsByTagQuery}
 import akka.stream.testkit.scaladsl.TestSink
-import java.util.UUID
 import scala.concurrent.duration._
 
 /**
@@ -11,12 +10,11 @@ import scala.concurrent.duration._
 trait EventsByTagSpec { _: ReadJournalSpec =>
 
   "CurrentEventsByTagQuery" should "fetch all current events" in {
-    val pId = "cebt-a"
-    val writerUuid = UUID.randomUUID()
+    val pId = newPersistenceId
 
-    writeMessages(1, 2, pId, writerUuid, Set(pId))
-    writeMessages(3, 3, pId, writerUuid, Set(s"$pId-non"))
-    writeMessages(4, 4, pId, writerUuid, Set(pId))
+    persist(pId, 2, Set(pId))
+    persist(pId, 1, Set(s"$pId-non"))
+    persist(pId, 1, Set(pId))
 
     readJournal.currentEventsByTag(pId, NoOffset)
         .map(envelope => (envelope.sequenceNr, envelope.event))
@@ -28,10 +26,9 @@ trait EventsByTagSpec { _: ReadJournalSpec =>
   }
 
   it should "fetch events starting at the given offset" in {
-    val pId = "cebt-b"
-    val writerUuid = UUID.randomUUID()
+    val pId = newPersistenceId
 
-    writeMessages(1, 5, pId, writerUuid, Set(pId))
+    persist(pId, 5, Set(pId))
 
     val offset = readJournal.currentEventsByTag(pId, NoOffset)
         .map(envelope => envelope.offset.asInstanceOf[Sequence].value)
@@ -48,10 +45,9 @@ trait EventsByTagSpec { _: ReadJournalSpec =>
   }
 
   it should "not fetch events that were added after" in {
-    val pId = "cebt-c"
-    val writerUuid = UUID.randomUUID()
+    val pId = newPersistenceId
 
-    writeMessages(1, 4, pId, writerUuid, Set(pId))
+    persist(pId, 4, Set(pId))
 
     readJournal.currentEventsByTag(pId, NoOffset)
         .map(envelope => (envelope.sequenceNr, envelope.event))
@@ -60,14 +56,13 @@ trait EventsByTagSpec { _: ReadJournalSpec =>
         .expectNextN(expectedEvents(pId, 1, 4))
         .expectComplete()
 
-    writeMessages(5, 5, pId, writerUuid, Set(pId))
+    persist(pId, 1, Set(pId))
   }
 
   it should "not see any events if the stream starts after the highest offset" in {
-    val pId = "cebt-d"
-    val writerUuid = UUID.randomUUID()
+    val pId = newPersistenceId
 
-    writeMessages(1, 4, pId, writerUuid, Set(pId))
+    persist(pId, 4, Set(pId))
 
     val offset = readJournal.currentEventsByTag(pId, NoOffset)
         .map(envelope => envelope.offset.asInstanceOf[Sequence].value)
@@ -81,10 +76,9 @@ trait EventsByTagSpec { _: ReadJournalSpec =>
   }
 
   it should "only fetch what is requested even if there is more in the buffer" in {
-    val pId = "cebt-e"
-    val writerUuid = UUID.randomUUID()
+    val pId = newPersistenceId
 
-    writeMessages(1, 4, pId, writerUuid, Set(pId))
+    persist(pId, 4, Set(pId))
 
     val probe = readJournal.currentEventsByTag(pId, NoOffset)
         .map(envelope => (envelope.sequenceNr, envelope.event))
@@ -102,7 +96,7 @@ trait EventsByTagSpec { _: ReadJournalSpec =>
   }
 
   it should "complete if no events are found" in {
-    val pId = "cebt-f"
+    val pId = newPersistenceId
 
     readJournal.currentEventsByTag(pId, NoOffset)
         .runWith(TestSink.probe)
@@ -110,7 +104,7 @@ trait EventsByTagSpec { _: ReadJournalSpec =>
   }
 
   "EventsByTagQuery" should "keep running even if the tag does not exist yet" in {
-    val pId = "ebt-a"
+    val pId = newPersistenceId
 
     readJournal.eventsByTag(pId, NoOffset)
         .runWith(TestSink.probe)
@@ -120,10 +114,9 @@ trait EventsByTagSpec { _: ReadJournalSpec =>
   }
 
   it should "fetch all existing events and keep fetching new ones" in {
-    val pId = "ebt-b"
-    val writerUuid = UUID.randomUUID()
+    val pId = newPersistenceId
 
-    writeMessages(1, 4, pId, writerUuid, Set(pId))
+    persist(pId, 4, Set(pId))
 
     val probe = readJournal.eventsByTag(pId, NoOffset)
         .map(envelope => (envelope.sequenceNr, envelope.event))
@@ -133,7 +126,7 @@ trait EventsByTagSpec { _: ReadJournalSpec =>
         .expectNextN(expectedEvents(pId, 1, 4))
         .expectNoMessage(300.millis)
 
-    writeMessages(5, 5, pId, writerUuid, Set(pId))
+    persist(pId, 1, Set(pId))
 
     probe
         .expectNextN(expectedEvents(pId, 5, 5))
@@ -141,10 +134,9 @@ trait EventsByTagSpec { _: ReadJournalSpec =>
   }
 
   it should "fetch events starting at the given offset" in {
-    val pId = "ebt-c"
-    val writerUuid = UUID.randomUUID()
+    val pId = newPersistenceId
 
-    writeMessages(1, 4, pId, writerUuid, Set(pId))
+    persist(pId, 4, Set(pId))
 
     val offset = readJournal.currentEventsByTag(pId, NoOffset)
         .map(envelope => envelope.offset.asInstanceOf[Sequence].value)
@@ -160,7 +152,7 @@ trait EventsByTagSpec { _: ReadJournalSpec =>
         .expectNextN(expectedEvents(pId, 2, 4))
         .expectNoMessage(300.millis)
 
-    writeMessages(5, 5, pId, writerUuid, Set(pId))
+    persist(pId, 1, Set(pId))
 
     probe
         .expectNextN(expectedEvents(pId, 5, 5))
@@ -168,10 +160,9 @@ trait EventsByTagSpec { _: ReadJournalSpec =>
   }
 
   it should "only fetch what is requested even if there is more in the buffer" in {
-    val pId = "ebt-d"
-    val writerUuid = UUID.randomUUID()
+    val pId = newPersistenceId
 
-    writeMessages(1, 4, pId, writerUuid, Set(pId))
+    persist(pId, 4, Set(pId))
 
     val probe = readJournal.eventsByTag(pId, NoOffset)
         .map(envelope => (envelope.sequenceNr, envelope.event))
@@ -181,7 +172,7 @@ trait EventsByTagSpec { _: ReadJournalSpec =>
         .expectNextN(expectedEvents(pId, 1, 4))
         .expectNoMessage(300.millis)
 
-    writeMessages(5, 8, pId, writerUuid, Set(pId))
+    persist(pId, 4, Set(pId))
 
     probe
         .expectNextN(expectedEvents(pId, 5, 5))
