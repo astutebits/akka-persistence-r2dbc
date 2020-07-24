@@ -35,15 +35,13 @@ class PostgreSqlReadJournalSpec
         .build())
   )
 
-  override def beforeEach(): Unit = {
+  override def beforeAll(): Unit = {
     eventually(timeout(60.seconds), interval(1.second)) {
-      r2dbc.withHandle(handle =>
-        handle.executeQuery("DELETE FROM event; DELETE FROM tag;", _.getRowsUpdated)
-      )
+      r2dbc.withHandle(_.executeQuery("DELETE FROM event; DELETE FROM tag;", _.getRowsUpdated))
           .blockLast()
     }
 
-    super.beforeEach()
+    super.beforeAll()
   }
 
   override def pluginId: String = "postgresql-read-journal"

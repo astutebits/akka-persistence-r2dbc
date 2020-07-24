@@ -11,41 +11,25 @@ import scala.concurrent.duration._
  */
 trait AllPersistenceIdSpec { _: ReadJournalSpec =>
 
-  "CurrentPersistenceIdsQuery" should "return empty if there are none" in {
-    readJournal.currentPersistenceIds()
-        .runWith(TestSink.probe)
-        .expectSubscriptionAndComplete()
-  }
-
-  it should "fetch all persistence ids" in {
-    val writerUuid = UUID.randomUUID()
-
-    writeMessages(1, 5, "foo", writerUuid)
-    writeMessages(1, 5, "bar", writerUuid)
-    writeMessages(6, 10, "foo", writerUuid)
-    writeMessages(6, 10, "bar", writerUuid)
+  "CurrentPersistenceIdsQuery" should "fetch all persistence ids" in {
+    val pIds = getAllPersistenceIds ++ List.fill(3)(persist(newPersistenceId, 5))
 
     readJournal.currentPersistenceIds()
         .runWith(TestSink.probe)
-        .request(10)
-        .expectNext("foo", "bar")
+        .request(pIds.size * 2)
+        .expectNextUnorderedN(pIds)
         .expectComplete()
   }
 
   it should "not fetch persistence ids added after the stream started" in {
-    val writerUuid = UUID.randomUUID()
-
-    writeMessages(1, 5, "foo", writerUuid)
-    writeMessages(1, 5, "bar", writerUuid)
-    writeMessages(6, 10, "foo", writerUuid)
-    writeMessages(6, 10, "bar", writerUuid)
+   val pIds = getAllPersistenceIds ++ List.fill(3)(persist(newPersistenceId, 5))
 
     val probe = readJournal.currentPersistenceIds()
         .runWith(TestSink.probe)
-        .request(2)
-        .expectNext("foo", "bar")
+        .request(pIds.size)
+    .expectNextUnorderedN(pIds)
 
-    writeMessages(1, 5, "baz", writerUuid)
+    persist(newPersistenceId, 5)
 
     probe
         .request(5)
@@ -53,74 +37,50 @@ trait AllPersistenceIdSpec { _: ReadJournalSpec =>
   }
 
   it should "only fetch what is requested even if there is more in the buffer" in {
-    val writerUuid = UUID.randomUUID()
-
-    writeMessages(1, 5, "foo", writerUuid)
-    writeMessages(1, 5, "bar", writerUuid)
-    writeMessages(6, 10, "foo", writerUuid)
-    writeMessages(6, 10, "bar", writerUuid)
-    writeMessages(1, 5, "baz", writerUuid)
+    val pIds = getAllPersistenceIds ++ List.fill(3)(persist(newPersistenceId, 5))
 
     val probe = readJournal.currentPersistenceIds()
         .runWith(TestSink.probe)
-        .request(2)
-        .expectNext("foo", "bar")
+        .request(pIds.size - 1)
+        .expectNextUnorderedN(pIds.filterNot(x => x == pIds.last))
         .expectNoMessage(100.millis)
 
     probe
         .request(1)
-        .expectNext("baz")
+        .expectNext(pIds.last)
         .expectComplete()
   }
 
-  "PersistenceIdsQuery" should "keep running even if empty" in {
-    readJournal.persistenceIds()
-        .runWith(TestSink.probe)
-        .request(100)
-        .expectNoMessage(300.millis)
-        .cancel()
-  }
-
-  it should "keep fetching persistence Ids" in {
-    val writerUuid = UUID.randomUUID()
-
-    writeMessages(1, 5, "foo", writerUuid)
-    writeMessages(1, 5, "bar", writerUuid)
-    writeMessages(6, 10, "foo", writerUuid)
-    writeMessages(6, 10, "bar", writerUuid)
+  "PersistenceIdsQuery" should "keep fetching persistence Ids" in {
+    val pIds = getAllPersistenceIds ++ List.fill(3)(persist(newPersistenceId, 5))
 
     val probe = readJournal.persistenceIds()
         .runWith(TestSink.probe)
-        .request(10)
-        .expectNext("foo", "bar")
+        .request(pIds.size * 2)
+        .expectNextUnorderedN(pIds)
         .expectNoMessage(100.millis)
 
-    writeMessages(1, 5, "baz", writerUuid)
+    val pid = persist(newPersistenceId, 5)
 
     probe
-        .expectNext("baz")
+        .expectNext(pid)
         .cancel()
   }
 
   it should "only fetch what is requested even if there is more in the buffer" in {
-    val writerUuid = UUID.randomUUID()
-
-    writeMessages(1, 5, "foo", writerUuid)
-    writeMessages(1, 5, "bar", writerUuid)
-    writeMessages(6, 10, "foo", writerUuid)
-    writeMessages(6, 10, "bar", writerUuid)
-    writeMessages(1, 5, "baz", writerUuid)
+    val pIds = getAllPersistenceIds ++ List.fill(3)(persist(newPersistenceId, 5))
 
     val probe = readJournal.persistenceIds()
         .runWith(TestSink.probe)
-        .request(2)
-        .expectNext("foo", "bar")
+        .request(pIds.size - 1)
+        .expectNextUnorderedN(pIds.filterNot(x => x == pIds.last))
         .expectNoMessage(100.millis)
 
     probe
         .request(1)
-        .expectNext("baz")
+        .expectNext(pIds.last)
         .cancel()
   }
+
 
 }
