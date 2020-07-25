@@ -20,7 +20,7 @@ final class PostgreSqlJournalPerfSpec
           .build())
       cf.create.flatMapMany(connection => {
         connection.createBatch()
-            .add("DELETE FROM journal_event")
+            .add("DELETE FROM event")
             .add("DELETE FROM tag")
             .execute().flatMap(_.getRowsUpdated())
             .concatWith(Flux.from(connection.close).`then`(Mono.empty()))

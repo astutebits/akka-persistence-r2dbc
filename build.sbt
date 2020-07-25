@@ -47,7 +47,7 @@ lazy val postgresql = Project(id = "postgresql", base = file("postgresql"))
       fork in Test := true,
       parallelExecution in Test := false
     )
-    .dependsOn(core, tck)
+    .dependsOn(core, tck % "test")
 
 lazy val mysql = Project(id = "mysql", base = file("mysql"))
     .settings(
@@ -58,17 +58,13 @@ lazy val mysql = Project(id = "mysql", base = file("mysql"))
       fork in Test := true,
       parallelExecution in Test := false
     )
-    .dependsOn(core, tck)
+    .dependsOn(core, tck % "test")
 
 lazy val tck = Project(id = "tck", base = file("tck"))
     .settings(
       name := "akka-persistence-tck",
       skip in publish := true,
       libraryDependencies ++= Dependencies.TCK
-    )
-    .settings(
-      fork in Test := true,
-      parallelExecution in Test := false
     )
     .dependsOn(core)
 
