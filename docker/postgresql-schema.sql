@@ -3,8 +3,13 @@ CREATE TABLE IF NOT EXISTS public.event
 (
     id             BIGSERIAL,
     persistence_id VARCHAR(255)          NOT NULL,
-    sequence_nr    BIGINT                 NOT NULL,
+    sequence_nr    BIGINT                NOT NULL,
+    timestamp      BIGINT                NOT NULL,
     payload        BYTEA                 NOT NULL,
+    manifest       VARCHAR(255)          NOT NULL,
+    writer_uuid    VARCHAR(255)          NOT NULL,
+    ser_id         INTEGER               NOT NULL,
+    ser_manifest   VARCHAR(255)          NOT NULL,
     deleted        BOOLEAN DEFAULT FALSE NOT NULL,
     PRIMARY KEY (persistence_id, sequence_nr)
 );

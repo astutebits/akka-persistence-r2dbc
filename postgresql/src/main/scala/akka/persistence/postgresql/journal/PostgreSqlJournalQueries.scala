@@ -10,8 +10,9 @@ import reactor.util.function.{Tuple2, Tuples}
 private[akka] object PostgreSqlJournalQueries {
 
   def insertEventsQuery(entries: JList[JournalEntry]): String =
-    "INSERT INTO event (id, persistence_id, sequence_nr, payload) VALUES " + entries.stream
-        .map(event => s"(DEFAULT, '${event.persistenceId}', ${event.sequenceNr},'\\x${hexDump(event.event)}')")
+    "INSERT INTO event (id, persistence_id, sequence_nr, timestamp, payload, manifest, ser_id, ser_manifest, writer_uuid) VALUES " + entries.stream
+        .map(it => s"(DEFAULT, '${it.persistenceId}', ${it.sequenceNr}, ${it.timestamp}, '\\x${hexDump(it.event)}', " +
+            s"'${it.eventManifest}', ${it.serId}, '${it.serManifest}', '${it.writerUuid}')")
         .collect(Collectors.joining(",")) + " RETURNING id;"
 
   def insertTagsQuery(items: JList[Tuple2[JLong, JSet[String]]]): String =
@@ -21,7 +22,7 @@ private[akka] object PostgreSqlJournalQueries {
         .collect(Collectors.joining(","))
 
   def findEventsQuery(persistenceId: String, fromSeqNr: Long, toSeqNr: Long, max: Long): String =
-    "SELECT id, persistence_id, sequence_nr, payload FROM event" +
+    "SELECT id, persistence_id, sequence_nr, timestamp, payload, manifest, ser_id, ser_manifest, writer_uuid FROM event" +
         s" WHERE deleted = false AND persistence_id = '$persistenceId'" +
         s" AND sequence_nr BETWEEN $fromSeqNr AND $toSeqNr ORDER BY sequence_nr ASC LIMIT $max"
 
