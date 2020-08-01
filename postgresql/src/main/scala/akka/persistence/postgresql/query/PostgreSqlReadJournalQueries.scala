@@ -2,7 +2,7 @@ package akka.persistence.postgresql.query
 
 import java.lang.{Long => JLong}
 
-private[akka] object PostgreSqlReadJournalStatements {
+private[akka] object PostgreSqlReadJournalQueries {
 
   /*
   def fetchPersistenceIdsQuery(offset: JLong): String =
@@ -19,13 +19,13 @@ private[akka] object PostgreSqlReadJournalStatements {
       fromSeqNr: JLong,
       toSeqNr: JLong
   ): String =
-    s"SELECT id, persistence_id, sequence_nr, payload FROM event" +
+    "SELECT id, persistence_id, sequence_nr, timestamp, payload, manifest, ser_id, ser_manifest, writer_uuid FROM event" +
         s" WHERE persistence_id = '$persistenceId'" +
         s" AND sequence_nr >= $fromSeqNr AND sequence_nr <= $toSeqNr" +
         s" ORDER BY sequence_nr ASC"
 
   def fetchByTagQuery(tag: String, fromIndex: JLong, toIndex: JLong): String =
-    s"SELECT e.id, e.persistence_id, e.sequence_nr, e.payload" +
+    "SELECT e.id, e.persistence_id, e.sequence_nr, e.timestamp, e.payload, e.manifest, e.ser_id, e.ser_manifest, e.writer_uuid" +
         s" FROM event e " +
         s" JOIN tag t ON e.id = t.event_id " +
         s" WHERE t.tag = '$tag' AND e.id >= $fromIndex AND e.id <= $toIndex" +

@@ -1,10 +1,10 @@
 package akka.persistence.postgresql.query.scaladsl;
 
-import static akka.persistence.postgresql.query.PostgreSqlReadJournalStatements.fetchByPersistenceIdQuery;
-import static akka.persistence.postgresql.query.PostgreSqlReadJournalStatements.fetchByTagQuery;
-import static akka.persistence.postgresql.query.PostgreSqlReadJournalStatements.fetchPersistenceIdsQuery;
-import static akka.persistence.postgresql.query.PostgreSqlReadJournalStatements.findHighestIndexQuery;
-import static akka.persistence.postgresql.query.PostgreSqlReadJournalStatements.findHighestSeqQuery;
+import static akka.persistence.postgresql.query.PostgreSqlReadJournalQueries.fetchByPersistenceIdQuery;
+import static akka.persistence.postgresql.query.PostgreSqlReadJournalQueries.fetchByTagQuery;
+import static akka.persistence.postgresql.query.PostgreSqlReadJournalQueries.fetchPersistenceIdsQuery;
+import static akka.persistence.postgresql.query.PostgreSqlReadJournalQueries.findHighestIndexQuery;
+import static akka.persistence.postgresql.query.PostgreSqlReadJournalQueries.findHighestSeqQuery;
 
 import akka.NotUsed;
 import akka.persistence.r2dbc.client.R2dbc;

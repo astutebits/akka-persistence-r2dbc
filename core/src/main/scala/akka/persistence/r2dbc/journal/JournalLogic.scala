@@ -16,7 +16,7 @@ import scala.util.Try
 trait JournalLogic {
 
   implicit val system: ActorSystem
-  lazy val serializer = new PersistenceReprSerializer(SerializationExtension(system))
+  lazy val serializer = new PersistenceReprSerDe(SerializationExtension(system))
 
   private lazy implicit val mat: Materializer = Materializer(system)
   private lazy implicit val ec: ExecutionContextExecutor = system.dispatcher
