@@ -4,7 +4,7 @@ import akka.NotUsed
 import akka.actor.ExtendedActorSystem
 import akka.persistence.query.scaladsl._
 import akka.persistence.query.{EventEnvelope, NoOffset, Offset, Sequence}
-import akka.persistence.r2dbc.journal.{JournalEntry, PersistenceReprSerializer}
+import akka.persistence.r2dbc.journal.{JournalEntry, PersistenceReprSerDe}
 import akka.serialization.SerializationExtension
 import akka.stream.scaladsl.Source
 import scala.concurrent.Future
@@ -21,7 +21,7 @@ trait ReactiveReadJournal
 
   protected val system: ExtendedActorSystem
 
-  private lazy val serializer = new PersistenceReprSerializer(SerializationExtension(system))
+  private lazy val serializer = new PersistenceReprSerDe(SerializationExtension(system))
   protected val dao: QueryDao
 
   override def currentPersistenceIds(): Source[String, NotUsed] =

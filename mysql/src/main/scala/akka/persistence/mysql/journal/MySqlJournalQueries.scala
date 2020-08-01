@@ -9,9 +9,10 @@ import reactor.util.function.{Tuple2, Tuples}
 
 private[akka] object MySqlJournalQueries {
 
-  def insertEventsQuery(events: JList[JournalEntry]): String =
-    "INSERT INTO event (persistence_id, sequence_nr, payload) VALUES " + events.stream
-        .map(entry => s"('${entry.persistenceId}',${entry.sequenceNr},x'${ByteBufUtil.hexDump(entry.event)}')")
+  def insertEventsQuery(entries: JList[JournalEntry]): String =
+    "INSERT INTO event (persistence_id, sequence_nr, timestamp, payload, manifest, ser_id, ser_manifest, writer_uuid) VALUES " + entries.stream
+        .map(it => s"('${it.persistenceId}', ${it.sequenceNr}, ${it.timestamp}, x'${ByteBufUtil.hexDump(it.event)}', " +
+            s"'${it.eventManifest}', ${it.serId}, '${it.serManifest}', '${it.writerUuid}')")
         .collect(Collectors.joining(",")) + ";"
 
   def insertTagsQuery(items: JList[Tuple2[JLong, JSet[String]]]): String =
@@ -21,7 +22,7 @@ private[akka] object MySqlJournalQueries {
         .collect(Collectors.joining(","))
 
   def findEventsQuery(persistenceId: String, fromSeqNr: Long, toSeqNr: Long, max: Long): String =
-    "SELECT id, persistence_id, sequence_nr, payload FROM event" +
+    "SELECT id, persistence_id, sequence_nr, timestamp, payload, manifest, ser_id, ser_manifest, writer_uuid FROM event" +
         s" WHERE deleted = false AND persistence_id = '$persistenceId'" +
         s" AND sequence_nr BETWEEN $fromSeqNr AND $toSeqNr ORDER BY sequence_nr ASC LIMIT $max"
 

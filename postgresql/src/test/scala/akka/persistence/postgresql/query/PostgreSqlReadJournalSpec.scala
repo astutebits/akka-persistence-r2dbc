@@ -18,7 +18,7 @@ object PostgreSqlReadJournalSpec {
       |""".stripMargin)
 
 }
-class PostgreSqlReadJournalSpec
+final class PostgreSqlReadJournalSpec
     extends ReadJournalSpec(PostgreSqlReadJournalSpec.Config)
         with AllPersistenceIdSpec
         with EventsByTagSpec

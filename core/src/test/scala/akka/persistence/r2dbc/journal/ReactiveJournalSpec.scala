@@ -16,7 +16,8 @@ import scala.collection.immutable.Seq
 
 final class ReactiveJournalSpec
     extends AsyncFlatSpecLike
-        with AsyncIdiomaticMockito with ArgumentMatchersSugar
+        with AsyncIdiomaticMockito
+        with ArgumentMatchersSugar
         with ResetMocksAfterEachAsyncTest
         with Matchers
         with TryValues
