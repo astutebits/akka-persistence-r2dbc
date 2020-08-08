@@ -25,6 +25,7 @@ object Dependencies {
     "io.projectreactor" % "reactor-core" % Versions.reactor,
     "com.typesafe.akka" %% "akka-persistence-query" % Versions.akka,
     "io.r2dbc" % "r2dbc-spi" % Versions.r2dbcSpi,
+    "io.r2dbc" % "r2dbc-pool" % "0.8.3.RELEASE",
 
     "org.mockito" %% "mockito-scala-scalatest" % Versions.mockito % Test,
     "io.r2dbc" % "r2dbc-spi-test" % Versions.r2dbcSpi % Test,
