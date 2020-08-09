@@ -1,10 +1,9 @@
 package akka.persistence.postgresql.query.scaladsl
 
 import akka.actor.ExtendedActorSystem
-import akka.persistence.r2dbc.client.R2dbc
-import akka.persistence.r2dbc.query.{QueryDao, ReactiveReadJournal}
 import akka.persistence.r2dbc.ConnectionPoolFactory
-import akka.persistence.r2dbc.journal.JournalPluginConfig
+import akka.persistence.r2dbc.client.R2dbc
+import akka.persistence.r2dbc.query.{QueryDao, ReactiveReadJournal, ReadJournalConfig}
 import com.typesafe.config.Config
 
 object PostgreSqlReadJournal {
@@ -38,12 +37,7 @@ object PostgreSqlReadJournal {
 final class PostgreSqlReadJournal(val system: ExtendedActorSystem, config: Config)
     extends ReactiveReadJournal {
 
-  override protected val dao: QueryDao = {
-    val factory = ConnectionPoolFactory(
-      "postgresql",
-      JournalPluginConfig(system.settings.config.getConfig(config.getString("journal-plugin")))
-    )
-    new PostgreSqlQueryDao(new R2dbc(factory))
-  }
+  override protected val dao: QueryDao =
+    new PostgreSqlQueryDao(new R2dbc(ConnectionPoolFactory("postgresql", ReadJournalConfig(system, config))))
 
 }
