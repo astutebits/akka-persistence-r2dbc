@@ -6,7 +6,7 @@ import org.reactivestreams.Publisher
 
 private[akka] object ResultUtils {
 
-  def toJournalEntry(result: Result): Publisher[JournalEntry] =
+  def toJournalEntry(result: Result): Publisher[JournalEntry] = {
     result.map((row, _) => JournalEntry.of(
       row.get("id", classOf[JLong]),
       row.get("persistence_id", classOf[String]),
@@ -18,6 +18,7 @@ private[akka] object ResultUtils {
       row.get("ser_manifest", classOf[String]),
       row.get("writer_uuid", classOf[String])
     ))
+  }
 
   def toPersistenceId(result: Result): Publisher[(JLong, String)] =
     result.map((row, _) => (

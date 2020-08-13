@@ -1,14 +1,12 @@
 package akka.persistence.r2dbc.client;
 
 import static akka.persistence.r2dbc.client.ReactiveUtils.appendError;
-import static akka.persistence.r2dbc.client.ReactiveUtils.typeSafe;
+import static akka.persistence.r2dbc.client.ReactiveUtils.passThrough;
 
 import io.r2dbc.spi.Connection;
 import io.r2dbc.spi.Result;
 import io.r2dbc.spi.Statement;
-import java.util.List;
 import java.util.Objects;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
 import java.util.stream.IntStream;
 import org.reactivestreams.Publisher;
@@ -53,10 +51,9 @@ public final class Handle {
    */
   public <T> Flux<T> inTransaction(Function<Handle, ? extends Publisher<T>> fn) {
     Objects.requireNonNull(fn, FN_REQUIRED);
-
     return Mono.from(beginTransaction())
         .thenMany(fn.apply(this))
-        .concatWith(typeSafe(this::commitTransaction))
+        .concatWith(passThrough(this::commitTransaction))
         .onErrorResume(appendError(this::rollbackTransaction));
   }
 
@@ -80,6 +77,8 @@ public final class Handle {
    * Executes the given SQL statement, binding an ordered set of parameters, and transforms each
    * {@link Result}s that are returned from execution.
    *
+   * XXX: Requires the pool to be configured for prepared statement caching.
+   *
    * @param sql SQL statement
    * @param fn a function used to transform each {@link Result} into a {@link Publisher} of values
    * @param parameters the parameters to bind
@@ -87,34 +86,18 @@ public final class Handle {
    * @return the values resulting from the {@link Result} transformation
    * @throws NullPointerException if {@code sql} or {@code fn} is {@code null}
    */
-  public <T> Flux<T> executeQuery(
+  public <T> Flux<T> executePreparedQuery(
       String sql,
-      Function<Result, ? extends Publisher<T>> fn,
-      Object... parameters
+      Object[] parameters,
+      Function<Result, ? extends Publisher<T>> fn
   ) {
     Objects.requireNonNull(sql, SQL_REQUIRED);
     Objects.requireNonNull(fn, FN_REQUIRED);
     Objects.requireNonNull(parameters, "parameters must not be null");
     Statement statement = this.connection.createStatement(sql);
-    IntStream.range(0, parameters.length).forEach(i -> statement.bind(i, parameters[i]));
-    return Flux.from(statement.execute()).flatMap(fn);
-  }
-
-  public <T> Flux<T> executeQuery(
-      String sql,
-      Function<Result, ? extends Publisher<T>> fn,
-      List<Object[]> parameters
-  ) {
-    Objects.requireNonNull(sql, SQL_REQUIRED);
-    Objects.requireNonNull(fn, FN_REQUIRED);
-    Objects.requireNonNull(parameters, "parameters must not be null");
-    Statement statement = this.connection.createStatement(sql);
-    var c = new AtomicInteger(0);
-    parameters.forEach(p -> {
-      IntStream.range(0, p.length).forEach(i -> statement.bind(i, p[i]));
-      if (c.incrementAndGet() < parameters.size()) {
-        statement.add();
-      }
+    IntStream.range(0, parameters.length).forEach(i -> {
+//      System.out.println("Binding ["+i+"] to ["+parameters[i]+"]");
+      statement.bind(i, parameters[i]);
     });
     return Flux.from(statement.execute()).flatMap(fn);
   }

@@ -4,6 +4,8 @@ import static akka.persistence.postgresql.journal.PostgreSqlJournalQueries.delet
 import static akka.persistence.postgresql.journal.PostgreSqlJournalQueries.findEventsQuery;
 import static akka.persistence.postgresql.journal.PostgreSqlJournalQueries.highestMarkedSeqNrQuery;
 import static akka.persistence.postgresql.journal.PostgreSqlJournalQueries.highestSeqNrQuery;
+import static akka.persistence.postgresql.journal.PostgreSqlJournalQueries.insertEventsBindingQuery;
+import static akka.persistence.postgresql.journal.PostgreSqlJournalQueries.insertEventQueryBindings;
 import static akka.persistence.postgresql.journal.PostgreSqlJournalQueries.insertEventsQuery;
 import static akka.persistence.postgresql.journal.PostgreSqlJournalQueries.insertTagsQuery;
 import static akka.persistence.postgresql.journal.PostgreSqlJournalQueries.markEventsAsDeletedQuery;
@@ -39,10 +41,29 @@ final class PostgreSqlJournalDao extends AbstractJournalDao {
     this.r2dbc = r2dbc;
   }
 
-  @Override
-  public Source<Integer, NotUsed> doWriteEvents(List<JournalEntry> events) {
+  public Source<Integer, NotUsed> bindWriteEvents(List<JournalEntry> events) {
     Flux<Integer> flux = r2dbc.inTransaction(handle ->
-        handle.executeQuery(insertEventsQuery(events), result -> ResultUtils.toSeqId(result, "id"))
+            handle.executePreparedQuery(
+            insertEventsBindingQuery(events), insertEventQueryBindings(events), result -> ResultUtils.toSeqId(result, "id")
+            )
+                .zipWithIterable(events.stream()
+                    .map(event -> CollectionConverters.asJava(event.tags()))
+                    .collect(Collectors.toList())
+                )
+                .collectList()
+                .filter(x -> x.stream().map(Tuple2::getT2).anyMatch(z -> !z.isEmpty()))
+                .flatMapMany(eventTags ->
+                    handle.executeQuery(insertTagsQuery(eventTags), Result::getRowsUpdated)
+                )
+    ).defaultIfEmpty(0);
+    return Source.fromPublisher(flux);
+  }
+
+  public Source<Integer, NotUsed> noBindWriteEvents(List<JournalEntry> events) {
+    Flux<Integer> flux = r2dbc.inTransaction(handle ->
+        handle.executeQuery(
+            insertEventsQuery(events), result -> ResultUtils.toSeqId(result, "id")
+        )
             .zipWithIterable(events.stream()
                 .map(event -> CollectionConverters.asJava(event.tags()))
                 .collect(Collectors.toList())
@@ -54,6 +75,11 @@ final class PostgreSqlJournalDao extends AbstractJournalDao {
             )
     ).defaultIfEmpty(0);
     return Source.fromPublisher(flux);
+  }
+
+  @Override
+  public Source<Integer, NotUsed> doWriteEvents(List<JournalEntry> events) {
+    return noBindWriteEvents(events);
   }
 
   @Override

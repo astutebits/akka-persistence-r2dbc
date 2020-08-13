@@ -48,14 +48,14 @@ public final class ReactiveUtils {
   }
 
   /**
-   * Convert a {@code Publisher<Void>} to a {@code Publisher<T>} allowing for type passthrough
+   * Convert a {@code Publisher<Void>} to a {@code Publisher<T>} allowing for type pass through
    * behavior.
    *
    * @param s a {@link Supplier} of a {@link Publisher} to execute
    * @param <T> the type passing through the flow
    * @return {@link Mono#empty()} of the appropriate type
    */
-  public static <T> Mono<T> typeSafe(Supplier<Publisher<Void>> s) {
+  public static <T> Mono<T> passThrough(Supplier<Publisher<Void>> s) {
     Objects.requireNonNull(s, "s must not be null");
     return Flux.from(s.get()).then(Mono.empty());
   }

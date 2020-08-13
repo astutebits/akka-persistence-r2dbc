@@ -1,5 +1,6 @@
 import sbt.Keys.skip
 
+resolvers += Resolver.mavenLocal
 ThisBuild / scalaVersion := "2.13.1"
 ThisBuild / organization := "com.astutebits"
 ThisBuild / javacOptions ++= Seq(
@@ -44,6 +45,8 @@ lazy val postgresql = Project(id = "postgresql", base = file("postgresql"))
       libraryDependencies ++= Dependencies.PostgreSQL
     )
     .settings(
+      resolvers += Resolver.mavenLocal,
+
       fork in Test := true,
       parallelExecution in Test := false
     )

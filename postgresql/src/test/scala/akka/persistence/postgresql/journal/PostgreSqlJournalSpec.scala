@@ -6,6 +6,7 @@ import com.typesafe.config.ConfigFactory
 import io.r2dbc.postgresql.{PostgresqlConnectionConfiguration, PostgresqlConnectionFactory}
 import org.scalatest.concurrent.Eventually
 import reactor.core.publisher.{Flux, Mono}
+import reactor.util.Loggers
 import scala.concurrent.duration._
 
 object PostgreSqlJournalSpec {
@@ -14,6 +15,8 @@ object PostgreSqlJournalSpec {
     """
       |akka.persistence.journal.plugin = "postgresql-journal"
       |akka.loglevel = "DEBUG"
+      |akka.loggers = ["akka.event.slf4j.Slf4jLogger"]
+      |akka.logging-filter = "akka.event.slf4j.Slf4jLoggingFilter"
       |""".stripMargin)
 }
 

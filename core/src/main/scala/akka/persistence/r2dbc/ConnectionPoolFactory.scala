@@ -3,6 +3,8 @@ package akka.persistence.r2dbc
 import io.r2dbc.pool.{ConnectionPool, ConnectionPoolConfiguration}
 import io.r2dbc.spi.{ConnectionFactories, ConnectionFactory, ConnectionFactoryOptions}
 
+import io.r2dbc.spi.{Option => CFOption}
+
 private[akka] trait PluginConfig {
   val db: DatabaseConfig
 }
@@ -21,9 +23,10 @@ private[akka] object ConnectionPoolFactory extends ((String, PluginConfig) => Co
         .option(ConnectionFactoryOptions.USER, pluginConfig.db.username)
         .option(ConnectionFactoryOptions.PASSWORD, pluginConfig.db.password)
         .option(ConnectionFactoryOptions.DATABASE, pluginConfig.db.database)
-        .build()
+    if (driver == "mysql")
+      factoryOptions.option(CFOption.valueOf("useServerPrepareStatement"), true)
     new ConnectionPool(
-      ConnectionPoolConfiguration.builder(ConnectionFactories.get(factoryOptions))
+      ConnectionPoolConfiguration.builder(ConnectionFactories.get(factoryOptions.build()))
           .initialSize(pluginConfig.db.poolInitialSize)
           .maxSize(pluginConfig.db.poolMaxSize)
           .maxLifeTime(pluginConfig.db.poolMaxLifeTime)

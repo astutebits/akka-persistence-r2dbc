@@ -4,7 +4,9 @@ import static akka.persistence.mysql.journal.MySqlJournalQueries.deleteEventsQue
 import static akka.persistence.mysql.journal.MySqlJournalQueries.findEventsQuery;
 import static akka.persistence.mysql.journal.MySqlJournalQueries.highestMarkedSeqNrQuery;
 import static akka.persistence.mysql.journal.MySqlJournalQueries.highestSeqNrQuery;
+import static akka.persistence.mysql.journal.MySqlJournalQueries.insertEventQueryBindings;
 import static akka.persistence.mysql.journal.MySqlJournalQueries.insertEventsQuery;
+import static akka.persistence.mysql.journal.MySqlJournalQueries.insertEventsBindingQuery;
 import static akka.persistence.mysql.journal.MySqlJournalQueries.insertTagsQuery;
 import static akka.persistence.mysql.journal.MySqlJournalQueries.markEventsAsDeletedQuery;
 import static akka.persistence.r2dbc.journal.ResultUtils.toSeqId;
@@ -46,24 +48,47 @@ final class MySqlJournalDao extends AbstractJournalDao {
     this.r2dbc = r2dbc;
   }
 
-  @Override
-  public Source<Integer, NotUsed> doWriteEvents(List<JournalEntry> events) {
+  public Source<Integer, NotUsed> bindWriteEvents(List<JournalEntry> events) {
     Flux<Integer> flux = r2dbc.inTransaction(handle ->
-        handle.executeQuery(insertEventsQuery(events), Result::getRowsUpdated)
-            .thenMany(handle.executeQuery("SELECT " + LAST_ID, MySqlJournalDao::lastId))
-            .flatMap(idx -> {
-              AtomicLong index = new AtomicLong(idx);
-              return Flux.fromStream(events.stream().map(entry ->
-                  Tuples.of(index.getAndIncrement(), CollectionConverters.asJava(entry.tags())))
-              );
-            })
-            .collectList()
-            .filter(x -> x.stream().map(Tuple2::getT2).anyMatch(z -> !z.isEmpty()))
-            .flatMapMany(eventTags ->
-                handle.executeQuery(insertTagsQuery(eventTags), Result::getRowsUpdated)
-            )
+            handle.executePreparedQuery(insertEventsBindingQuery(events), insertEventQueryBindings(events), Result::getRowsUpdated)
+                .thenMany(handle.executeQuery("SELECT " + LAST_ID, MySqlJournalDao::lastId))
+                .flatMap(idx -> {
+                  AtomicLong index = new AtomicLong(idx);
+                  return Flux.fromStream(events.stream().map(entry ->
+                      Tuples.of(index.getAndIncrement(), CollectionConverters.asJava(entry.tags())))
+                  );
+                })
+                .collectList()
+                .filter(x -> x.stream().map(Tuple2::getT2).anyMatch(z -> !z.isEmpty()))
+                .flatMapMany(eventTags ->
+                    handle.executeQuery(insertTagsQuery(eventTags), Result::getRowsUpdated)
+                )
     ).defaultIfEmpty(0);
     return Source.fromPublisher(flux);
+  }
+
+  public Source<Integer, NotUsed> noBindWriteEvents(List<JournalEntry> events) {
+    Flux<Integer> flux = r2dbc.inTransaction(handle ->
+            handle.executeQuery(insertEventsQuery(events), Result::getRowsUpdated)
+                .thenMany(handle.executeQuery("SELECT " + LAST_ID, MySqlJournalDao::lastId))
+                .flatMap(idx -> {
+                  AtomicLong index = new AtomicLong(idx);
+                  return Flux.fromStream(events.stream().map(entry ->
+                      Tuples.of(index.getAndIncrement(), CollectionConverters.asJava(entry.tags())))
+                  );
+                })
+                .collectList()
+                .filter(x -> x.stream().map(Tuple2::getT2).anyMatch(z -> !z.isEmpty()))
+                .flatMapMany(eventTags ->
+                    handle.executeQuery(insertTagsQuery(eventTags), Result::getRowsUpdated)
+                )
+    ).defaultIfEmpty(0);
+    return Source.fromPublisher(flux);
+  }
+
+  @Override
+  public Source<Integer, NotUsed> doWriteEvents(List<JournalEntry> events) {
+    return noBindWriteEvents(events);
   }
 
   @Override
