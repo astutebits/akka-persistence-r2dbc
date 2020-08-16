@@ -6,7 +6,7 @@ import akka.persistence.query.javadsl._
 import akka.persistence.query.{EventEnvelope, Offset}
 import akka.stream.javadsl.Source
 
-object MySqlReadJournal {
+private[akka] object MySqlReadJournal {
 
   /**
    * The default identifier for [[MySqlReadJournal]] to be used with
@@ -35,7 +35,7 @@ object MySqlReadJournal {
  * absolute path corresponding to the identifier, which is `"mysql-read-journal"`
  * for the default [[MySqlReadJournal#Identifier]]. See `reference.conf`.
  */
-final class MySqlReadJournal(readJournal: ScalaMySqlReadJournal)
+private[query] final class MySqlReadJournal(readJournal: ScalaMySqlReadJournal)
     extends ReadJournal
         with CurrentPersistenceIdsQuery
         with PersistenceIdsQuery

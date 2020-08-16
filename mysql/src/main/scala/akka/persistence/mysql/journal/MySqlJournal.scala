@@ -12,7 +12,7 @@ import com.typesafe.config.Config
  * @see [[https://doc.akka.io/docs/akka/current/persistence-journals.html#journal-plugin-api Journal plugin API]]
  * @see [[https://github.com/mirromutth/r2dbc-mysql r2dbc-mysql]]
  */
-final class MySqlJournal(config: Config)
+private[akka] final class MySqlJournal(config: Config)
     extends ReactiveJournal {
 
   override implicit val system: ActorSystem = context.system

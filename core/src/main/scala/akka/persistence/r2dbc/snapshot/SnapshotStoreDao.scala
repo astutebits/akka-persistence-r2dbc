@@ -4,7 +4,7 @@ import akka.NotUsed
 import akka.persistence.SnapshotSelectionCriteria
 import akka.stream.scaladsl.Source
 
-trait SnapshotStoreDao {
+private[akka] trait SnapshotStoreDao {
 
   /**
    * Returns a single [[SnapshotEntry]] in the [[Source]] that matches the criteria for the given

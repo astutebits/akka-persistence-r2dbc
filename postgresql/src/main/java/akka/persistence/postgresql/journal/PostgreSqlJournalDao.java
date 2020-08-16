@@ -35,7 +35,7 @@ final class PostgreSqlJournalDao extends AbstractJournalDao {
 
   private final R2dbc r2dbc;
 
-  public PostgreSqlJournalDao(R2dbc r2dbc) {
+  PostgreSqlJournalDao(R2dbc r2dbc) {
     this.r2dbc = r2dbc;
   }
 

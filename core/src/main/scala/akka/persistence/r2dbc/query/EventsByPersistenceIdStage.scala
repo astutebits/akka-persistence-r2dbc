@@ -6,7 +6,7 @@ import akka.stream.scaladsl.Source
 import java.util.concurrent.atomic.AtomicBoolean
 import scala.concurrent.duration.FiniteDuration
 
-private[akka] object EventsByPersistenceIdStage {
+private[query] object EventsByPersistenceIdStage {
 
   def apply(
       dao: QueryDao,
@@ -22,7 +22,7 @@ private[akka] object EventsByPersistenceIdStage {
 /**
  * Walks the journal entries returning any events that match the given persistence ID.
  */
-private[akka] final class EventsByPersistenceIdStage private(
+private[query] final class EventsByPersistenceIdStage private(
     dao: QueryDao,
     persistenceId: String,
     fromSeqNr: Long,

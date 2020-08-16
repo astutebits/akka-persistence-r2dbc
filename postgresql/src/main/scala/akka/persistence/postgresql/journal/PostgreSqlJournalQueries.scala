@@ -7,7 +7,7 @@ import java.util.stream.Collectors
 import java.util.{List => JList, Set => JSet}
 import reactor.util.function.{Tuple2, Tuples}
 
-private[akka] object PostgreSqlJournalQueries {
+private[journal] object PostgreSqlJournalQueries {
 
   def insertEventsQuery(entries: JList[JournalEntry]): String =
     "INSERT INTO event (id, persistence_id, sequence_nr, timestamp, payload, manifest, ser_id, ser_manifest, writer_uuid) VALUES " + entries.stream
