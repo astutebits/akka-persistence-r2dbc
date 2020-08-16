@@ -6,7 +6,7 @@ import akka.stream.scaladsl.Source
 import java.util.concurrent.atomic.AtomicBoolean
 import scala.concurrent.duration.FiniteDuration
 
-private[akka] object EventsByTagStage {
+private[query] object EventsByTagStage {
 
   def apply(
       dao: QueryDao,
@@ -20,7 +20,7 @@ private[akka] object EventsByTagStage {
 /**
  * Walks the journal entries returning any events that match the given tag.
  */
-private[akka] final class EventsByTagStage private(
+private[query] final class EventsByTagStage private(
     dao: QueryDao,
     tag: String,
     offset: Long,

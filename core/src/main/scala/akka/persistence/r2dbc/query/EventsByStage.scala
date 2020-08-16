@@ -8,13 +8,13 @@ import akka.stream.{Attributes, Outlet, SourceShape}
 import java.util.concurrent.atomic.AtomicBoolean
 import scala.concurrent.duration.FiniteDuration
 
-private[akka] object EventsByStage {
+private[query] object EventsByStage {
 
   private case object PollTimerKey
 
 }
 
-private[akka] abstract class EventsByStage extends GraphStage[SourceShape[JournalEntry]] {
+private[query] abstract class EventsByStage extends GraphStage[SourceShape[JournalEntry]] {
 
   import EventsByStage.PollTimerKey
 

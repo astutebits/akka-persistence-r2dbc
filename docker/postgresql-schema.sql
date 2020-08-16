@@ -28,9 +28,9 @@ CREATE UNIQUE INDEX tag_journal_event_id_idx ON public.tag (event_id);
 DROP TABLE IF EXISTS public.snapshot;
 CREATE TABLE IF NOT EXISTS public.snapshot
 (
-    persistence_id  VARCHAR(255) NOT NULL,
-    sequence_number BIGINT       NOT NULL,
-    timestamp       BIGINT       NOT NULL,
-    snapshot        BYTEA        NOT NULL,
-    CONSTRAINT pk_snapshot_persistence_id_sequence_number PRIMARY KEY (persistence_id, sequence_number)
+    persistence_id VARCHAR(255) NOT NULL,
+    sequence_nr    BIGINT       NOT NULL,
+    instant        BIGINT       NOT NULL,
+    snapshot       BYTEA        NOT NULL,
+    CONSTRAINT pk_snapshot_persistence_id_sequence_number PRIMARY KEY (persistence_id, sequence_nr)
 );

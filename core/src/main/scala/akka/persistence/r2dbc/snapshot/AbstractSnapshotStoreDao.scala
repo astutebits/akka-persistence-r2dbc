@@ -6,7 +6,7 @@ import akka.NotUsed
 import akka.persistence.SnapshotSelectionCriteria
 import akka.stream.scaladsl.Source
 
-abstract class AbstractSnapshotStoreDao extends SnapshotStoreDao {
+private[akka] abstract class AbstractSnapshotStoreDao extends SnapshotStoreDao {
 
   final override def fetchSnapshot(
       persistenceId: String,

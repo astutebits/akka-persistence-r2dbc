@@ -27,8 +27,8 @@ CREATE TABLE IF NOT EXISTS tag
 CREATE TABLE IF NOT EXISTS snapshot
 (
     `persistence_id` VARCHAR(255)    NOT NULL,
-    `seq_nr`         BIGINT UNSIGNED NOT NULL,
-    `time`           BIGINT UNSIGNED NOT NULL,
+    `sequence_nr`    BIGINT UNSIGNED NOT NULL,
+    `instant`        BIGINT UNSIGNED NOT NULL,
     `snapshot`       BLOB            NOT NULL,
-    PRIMARY KEY (persistence_id, seq_nr)
+    PRIMARY KEY (persistence_id, sequence_nr)
 );

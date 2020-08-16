@@ -6,17 +6,17 @@ import akka.serialization.Serialization
 
 import scala.util.Try
 
-trait SnapshotSerializer {
+private[snapshot] trait SnapshotSerializer {
   def serialize(metadata: SnapshotMetadata, snapshot: Any): Try[SnapshotEntry]
 
   def deserialize(entry: SnapshotEntry): Try[SelectedSnapshot]
 }
 
-private[akka] object SnapshotSerializerImpl {
+private[snapshot] object SnapshotSerializerImpl {
   def apply(serialization: Serialization): SnapshotSerializer = new SnapshotSerializerImpl(serialization)
 }
 
-private[akka] final class SnapshotSerializerImpl private(serialization: Serialization)
+private[snapshot] final class SnapshotSerializerImpl private(serialization: Serialization)
     extends SnapshotSerializer {
 
   def serialize(metadata: SnapshotMetadata, snapshot: Any): Try[SnapshotEntry] = serialization
@@ -26,7 +26,7 @@ private[akka] final class SnapshotSerializerImpl private(serialization: Serializ
   def deserialize(entry: SnapshotEntry): Try[SelectedSnapshot] = serialization
       .deserialize(entry.snapshot, classOf[Snapshot])
       .map(snapshot => {
-        val metadata = SnapshotMetadata(entry.persistenceId, entry.sequenceNumber, entry.timestamp)
+        val metadata = SnapshotMetadata(entry.persistenceId, entry.sequenceNr, entry.instant)
         SelectedSnapshot(metadata, snapshot.data)
       })
 }

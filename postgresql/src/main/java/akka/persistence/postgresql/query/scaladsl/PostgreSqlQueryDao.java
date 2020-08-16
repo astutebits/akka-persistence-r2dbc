@@ -19,7 +19,7 @@ final class PostgreSqlQueryDao extends AbstractQueryDao {
 
   private final R2dbc r2dbc;
 
-  public PostgreSqlQueryDao(R2dbc r2dbc) {
+  PostgreSqlQueryDao(R2dbc r2dbc) {
     this.r2dbc = r2dbc;
   }
 

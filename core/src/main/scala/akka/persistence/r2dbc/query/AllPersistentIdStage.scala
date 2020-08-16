@@ -14,7 +14,7 @@ private[akka] object AllPersistentIdStage {
   private case object PollTimerKey
 }
 
-final class AllPersistentIdStage private(
+private[query] final class AllPersistentIdStage private(
     dao: QueryDao,
     refreshInterval: Option[FiniteDuration] = None
 ) extends GraphStage[SourceShape[String]] {
