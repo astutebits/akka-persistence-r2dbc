@@ -19,7 +19,7 @@ final class MySqlQueryDao extends AbstractQueryDao {
 
   private final R2dbc r2dbc;
 
-  public MySqlQueryDao(R2dbc r2dbc) {
+  MySqlQueryDao(R2dbc r2dbc) {
     this.r2dbc = r2dbc;
   }
 

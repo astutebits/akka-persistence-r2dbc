@@ -18,6 +18,10 @@ object PostgreSqlReadJournalSpec {
       |""".stripMargin)
 
 }
+
+/**
+ * Test case for [[scaladsl.PostgreSqlReadJournal]]
+ */
 final class PostgreSqlReadJournalSpec
     extends ReadJournalSpec(PostgreSqlReadJournalSpec.Config)
         with AllPersistenceIdSpec

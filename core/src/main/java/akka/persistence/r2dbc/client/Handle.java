@@ -1,7 +1,7 @@
 package akka.persistence.r2dbc.client;
 
 import static akka.persistence.r2dbc.client.ReactiveUtils.appendError;
-import static akka.persistence.r2dbc.client.ReactiveUtils.typeSafe;
+import static akka.persistence.r2dbc.client.ReactiveUtils.passThrough;
 
 import io.r2dbc.spi.Connection;
 import io.r2dbc.spi.Result;
@@ -52,7 +52,7 @@ public final class Handle {
 
     return Mono.from(beginTransaction())
         .thenMany(fn.apply(this))
-        .concatWith(typeSafe(this::commitTransaction))
+        .concatWith(passThrough(this::commitTransaction))
         .onErrorResume(appendError(this::rollbackTransaction));
   }
 

@@ -35,7 +35,7 @@ object PostgreSqlReadJournal {
  * for the default [[PostgreSqlReadJournal#Identifier]]. See `reference.conf`.
  *
  */
-final class PostgreSqlReadJournal(readJournal: ScalaPostgresqlReadJournal)
+private[query] final class PostgreSqlReadJournal(readJournal: ScalaPostgresqlReadJournal)
     extends ReadJournal
         with CurrentPersistenceIdsQuery
         with PersistenceIdsQuery

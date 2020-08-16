@@ -2,7 +2,7 @@ package akka.persistence.postgresql.query
 
 import java.lang.{Long => JLong}
 
-private[akka] object PostgreSqlReadJournalQueries {
+private[query] object PostgreSqlReadJournalQueries {
 
   /*
   def fetchPersistenceIdsQuery(offset: JLong): String =

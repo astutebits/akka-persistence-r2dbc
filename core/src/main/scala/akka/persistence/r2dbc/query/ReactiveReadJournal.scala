@@ -10,7 +10,7 @@ import akka.stream.scaladsl.Source
 import scala.concurrent.Future
 import scala.concurrent.duration.{FiniteDuration, _}
 
-trait ReactiveReadJournal
+private[akka] trait ReactiveReadJournal
     extends ReadJournal
         with CurrentPersistenceIdsQuery
         with PersistenceIdsQuery

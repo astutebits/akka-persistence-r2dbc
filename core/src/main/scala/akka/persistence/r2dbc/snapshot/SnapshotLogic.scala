@@ -7,7 +7,7 @@ import akka.stream.scaladsl.{Sink, Source}
 
 import scala.concurrent.{ExecutionContextExecutor, Future}
 
-trait SnapshotLogic {
+private[akka] trait SnapshotLogic {
 
   protected val system: ActorSystem
   protected val serializer: SnapshotSerializer

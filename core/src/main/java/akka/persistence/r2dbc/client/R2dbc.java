@@ -59,7 +59,7 @@ public final class R2dbc {
     return Mono.from(factory.create())
         .map(Handle::new)
         .flatMapMany(handle -> Flux.from(fn.apply(handle))
-            .concatWith(ReactiveUtils.typeSafe(handle::close))
+            .concatWith(ReactiveUtils.passThrough(handle::close))
             .onErrorResume(ReactiveUtils.appendError(handle::close))
         );
   }

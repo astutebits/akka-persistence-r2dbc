@@ -2,7 +2,7 @@ package akka.persistence.mysql.query.scaladsl
 
 import java.lang.{Long => JLong}
 
-private[akka] object MySqlReadJournalQueries {
+private[query] object MySqlReadJournalQueries {
 
   def fetchPersistenceIdsQuery(offset: JLong): String =
     "SELECT persistence_id, max(id) AS id FROM event" +

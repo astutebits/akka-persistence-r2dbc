@@ -42,7 +42,7 @@ final class MySqlJournalDao extends AbstractJournalDao {
 
   private final R2dbc r2dbc;
 
-  public MySqlJournalDao(R2dbc r2dbc) {
+  MySqlJournalDao(R2dbc r2dbc) {
     this.r2dbc = r2dbc;
   }
 
