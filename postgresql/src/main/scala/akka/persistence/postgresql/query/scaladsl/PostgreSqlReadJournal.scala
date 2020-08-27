@@ -50,7 +50,7 @@ object PostgreSqlReadJournal {
  * absolute path corresponding to the identifier, which is `"postgresql-read-journal"`
  * for the default [[PostgreSqlReadJournal#Identifier]]. See `reference.conf`.
  */
-private[query] final class PostgreSqlReadJournal(val system: ExtendedActorSystem, config: Config)
+final class PostgreSqlReadJournal(val system: ExtendedActorSystem, config: Config)
     extends ReactiveReadJournal {
 
   override protected val dao: QueryDao =
