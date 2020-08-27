@@ -1,5 +1,6 @@
 import sbt.Keys.skip
 
+ThisBuild / version := "0.1.0"
 ThisBuild / scalaVersion := "2.13.1"
 ThisBuild / organization := "com.astutebits"
 ThisBuild / javacOptions ++= Seq(
@@ -33,7 +34,7 @@ lazy val root = (project in file("."))
 lazy val core = Project(id = "core", base = file("core"))
     .settings(
       name := "akka-persistence-r2dbc-core",
-      skip in publish := true,
+      skip in publish := false,
       libraryDependencies ++= Dependencies.Core
     )
     .settings(fork in Test := true)
