@@ -29,7 +29,7 @@ import scala.concurrent.duration._
 object PostgreSqlSnapshotStoreSpec {
   private val PluginConfig = ConfigFactory.parseString(
     """
-      |akka.persistence.snapshot-store.plugin = "postgres-snapshot"
+      |akka.persistence.snapshot-store.plugin = "postgresql-snapshot-store"
       |""".stripMargin)
 
 }
