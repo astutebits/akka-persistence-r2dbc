@@ -22,9 +22,9 @@ import akka.serialization.SerializationExtension
 import akka.stream.Materializer
 import akka.stream.scaladsl.{Sink, Source}
 import java.util.{HashMap => JHMap, Map => JMap}
-import scala.collection.immutable.Seq
 import scala.concurrent.{ExecutionContextExecutor, Future}
 import scala.util.Try
+import scala.collection.immutable
 
 /**
  * A mixin with the journal logic (separated from [[ReactiveJournal]] to make testing easier).
@@ -39,8 +39,8 @@ trait JournalLogic {
   protected val dao: JournalDao
   private val writeInProgress: JMap[String, Future[Unit]] = new JHMap
 
-  def asyncWriteMessages(messages: Seq[AtomicWrite]): Future[Seq[Try[Unit]]] = {
-    val serializedTries: Seq[Try[Seq[JournalEntry]]] = messages.map { atomicWrite =>
+  def asyncWriteMessages(messages: immutable.Seq[AtomicWrite]): Future[immutable.Seq[Try[Unit]]] = {
+    val serializedTries: immutable.Seq[Try[immutable.Seq[JournalEntry]]] = messages.map { atomicWrite =>
       // Since all PersistentRepr are persisted atomically they all get the same timestamp
       val now = System.currentTimeMillis()
       val serialized = atomicWrite.payload.map(pr => serializer.serialize(pr.withTimestamp(now)))
@@ -48,21 +48,21 @@ trait JournalLogic {
     }
 
     // If serialization fails for some AtomicWrites, the other AtomicWrites may still be written
-    val entriesToWrite: Seq[JournalEntry] = for {
-      serializeTry: Try[Seq[JournalEntry]] <- serializedTries
-      row: JournalEntry <- serializeTry.getOrElse(Seq.empty)
+    val entriesToWrite: immutable.Seq[JournalEntry] = for {
+      serializeTry: Try[immutable.Seq[JournalEntry]] <- serializedTries
+      row: JournalEntry <- serializeTry.getOrElse(immutable.Seq.empty)
     } yield row
 
     val pid = messages.head.persistenceId
 
-    val future = Source(List(entriesToWrite))
+    val future: Future[Unit] = Source(List(entriesToWrite))
         .flatMapConcat(events => dao.writeEvents(events))
         .map(_ => ())
         .runWith(Sink.last[Unit])
 
     writeInProgress.put(pid, future)
     future.map(_ => TrySeq.writeCompleteSignal(serializedTries))
-        .andThen(_ => writeInProgress.remove(pid))
+        .andThen{case _ => writeInProgress.remove(pid)}
   }
 
   def asyncDeleteMessagesTo(persistenceId: String, toSequenceNr: Long): Future[Unit] = {

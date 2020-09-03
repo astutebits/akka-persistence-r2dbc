@@ -19,6 +19,7 @@ package akka.persistence.query
 import akka.persistence.query.scaladsl.{CurrentEventsByPersistenceIdQuery, EventsByPersistenceIdQuery}
 import akka.stream.testkit.scaladsl.TestSink
 import scala.concurrent.duration._
+import scala.collection.immutable
 
 /**
  * Test case for [[CurrentEventsByPersistenceIdQuery]] and [[EventsByPersistenceIdQuery]].
@@ -270,7 +271,7 @@ trait EventsByPersistenceIdSpec { _: ReadJournalSpec =>
     events(1)._3.value should be < events.last._3.value
   }
 
-  private def expectedEvents(pId: String, fromSeq: Long, toSeq: Long): Seq[(Long, Any)] =
+  private def expectedEvents(pId: String, fromSeq: Long, toSeq: Long): immutable.Seq[(Long, Any)] =
     for (i <- fromSeq to toSeq) yield (i, s"$pId-$i")
 
 }
