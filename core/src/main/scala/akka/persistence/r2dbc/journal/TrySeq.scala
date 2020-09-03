@@ -15,8 +15,8 @@
  */
 
 package akka.persistence.r2dbc.journal
+import scala.collection.immutable.Seq
 
-import scala.collection.immutable.Nil
 import scala.util.{Failure, Success, Try}
 
 private[akka] object TrySeq {

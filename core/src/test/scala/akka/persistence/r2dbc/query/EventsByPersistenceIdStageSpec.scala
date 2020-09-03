@@ -27,6 +27,8 @@ import org.mockito.{ArgumentMatchersSugar, IdiomaticMockito}
 import org.scalatest.BeforeAndAfterAll
 import org.scalatest.flatspec.AnyFlatSpecLike
 import org.scalatest.matchers.should.Matchers
+
+import scala.collection.immutable.Seq
 import scala.concurrent.duration._
 import scala.util.Random
 
@@ -68,12 +70,11 @@ final class EventsByPersistenceIdStageSpec
   }
 
   it should "throw an exception when 'fromSeqNr' is negative" in {
-    val r = new Random()
     for {
       _ <- 0 to 10
     } yield {
       a[IllegalArgumentException] should be thrownBy {
-        EventsByPersistenceIdStage(dao, "foo", r.between(Long.MinValue, 0), Long.MaxValue)
+        EventsByPersistenceIdStage(dao, "foo", randomBetween(Long.MinValue, 0), Long.MaxValue)
       }
     }
   }
@@ -84,7 +85,7 @@ final class EventsByPersistenceIdStageSpec
       _ <- 0 to 10
     } yield {
       a[IllegalArgumentException] should be thrownBy {
-        EventsByPersistenceIdStage(dao, "foo", 0, r.between(Long.MinValue, 0))
+        EventsByPersistenceIdStage(dao, "foo", 0, randomBetween(Long.MinValue, 0))
       }
     }
   }
