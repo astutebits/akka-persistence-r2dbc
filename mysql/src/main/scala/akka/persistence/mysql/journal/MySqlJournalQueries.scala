@@ -16,26 +16,28 @@
 
 package akka.persistence.mysql.journal
 
+import java.lang.{Long => JLong}
+import java.util.{List => JList, Set => JSet}
+
 import akka.persistence.r2dbc.journal.JournalEntry
 import io.netty.buffer.ByteBufUtil
-import java.lang.{Long => JLong}
-import java.util.stream.Collectors
-import java.util.{List => JList, Set => JSet}
-import reactor.util.function.{Tuple2, Tuples}
+import reactor.util.function.Tuple2
+
+import scala.collection.JavaConverters._
 
 private[journal] object MySqlJournalQueries {
 
   def insertEventsQuery(entries: JList[JournalEntry]): String =
-    "INSERT INTO event (persistence_id, sequence_nr, timestamp, payload, manifest, ser_id, ser_manifest, writer_uuid) VALUES " + entries.stream
+    "INSERT INTO event (persistence_id, sequence_nr, timestamp, payload, manifest, ser_id, ser_manifest, writer_uuid) VALUES " + entries.asScala
         .map(it => s"('${it.persistenceId}', ${it.sequenceNr}, ${it.timestamp}, x'${ByteBufUtil.hexDump(it.event)}', " +
             s"'${it.eventManifest}', ${it.serId}, '${it.serManifest}', '${it.writerUuid}')")
-        .collect(Collectors.joining(",")) + ";"
+        .reduce(_ + "," + _)
 
   def insertTagsQuery(items: JList[Tuple2[JLong, JSet[String]]]): String =
-    "INSERT INTO tag (event_id, tag) VALUES " + items.stream
-        .flatMap(item => item.getT2.stream.map(tag => Tuples.of(item.getT1, tag)))
-        .map((item: Tuple2[JLong, String]) => s"(${item.getT1},'${item.getT2}')")
-        .collect(Collectors.joining(","))
+    "INSERT INTO tag (event_id, tag) VALUES " + items.asScala
+        .flatMap(item => item.getT2.asScala.map(tag => (item.getT1, tag)))
+        .map(it => s"(${it._1},'${it._2}')")
+        .reduce(_ + "," + _)
 
   def findEventsQuery(persistenceId: String, fromSeqNr: Long, toSeqNr: Long, max: Long): String =
     "SELECT id, persistence_id, sequence_nr, timestamp, payload, manifest, ser_id, ser_manifest, writer_uuid FROM event" +

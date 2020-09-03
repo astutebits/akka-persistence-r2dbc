@@ -16,26 +16,28 @@
 
 package akka.persistence.postgresql.journal
 
+import java.lang.{Long => JLong}
+import java.util.{List => JList, Set => JSet}
+
 import akka.persistence.r2dbc.journal.JournalEntry
 import io.netty.buffer.ByteBufUtil.hexDump
-import java.lang.{Long => JLong}
-import java.util.stream.Collectors
-import java.util.{List => JList, Set => JSet}
-import reactor.util.function.{Tuple2, Tuples}
+import reactor.util.function.Tuple2
+
+import scala.collection.JavaConverters._
 
 private[journal] object PostgreSqlJournalQueries {
 
   def insertEventsQuery(entries: JList[JournalEntry]): String =
-    "INSERT INTO event (id, persistence_id, sequence_nr, timestamp, payload, manifest, ser_id, ser_manifest, writer_uuid) VALUES " + entries.stream
+    "INSERT INTO event (id, persistence_id, sequence_nr, timestamp, payload, manifest, ser_id, ser_manifest, writer_uuid) VALUES " + entries.asScala
         .map(it => s"(DEFAULT, '${it.persistenceId}', ${it.sequenceNr}, ${it.timestamp}, '\\x${hexDump(it.event)}', " +
             s"'${it.eventManifest}', ${it.serId}, '${it.serManifest}', '${it.writerUuid}')")
-        .collect(Collectors.joining(",")) + " RETURNING id;"
+        .reduce(_ + "," + _) + " RETURNING id;"
 
   def insertTagsQuery(items: JList[Tuple2[JLong, JSet[String]]]): String =
-    "INSERT INTO tag (id, event_id, tag) VALUES " + items.stream
-        .flatMap(item => item.getT2.stream.map((tag: String) => Tuples.of(item.getT1, tag)))
-        .map((item: Tuple2[JLong, String]) => s"(DEFAULT,${item.getT1},'${item.getT2}')")
-        .collect(Collectors.joining(","))
+    "INSERT INTO tag (id, event_id, tag) VALUES " + items.asScala
+        .flatMap(it => it.getT2.asScala.map(tag => (it.getT1, tag)))
+        .map(it => s"(DEFAULT,${it._1},'${it._2}')")
+        .reduce(_ + "," + _)
 
   def findEventsQuery(persistenceId: String, fromSeqNr: Long, toSeqNr: Long, max: Long): String =
     "SELECT id, persistence_id, sequence_nr, timestamp, payload, manifest, ser_id, ser_manifest, writer_uuid FROM event" +

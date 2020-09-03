@@ -20,6 +20,8 @@ import org.scalatest.TryValues._
 import org.scalatest.flatspec.AnyFlatSpecLike
 import org.scalatest.matchers.should.Matchers
 import scala.util.{Failure, Success}
+import scala.collection.immutable.Seq
+
 
 /**
  * Test case for [[TrySeq]].

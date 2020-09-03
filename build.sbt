@@ -1,7 +1,7 @@
 import sbt.Keys.skip
 
 ThisBuild / version := "0.1.0"
-ThisBuild / scalaVersion := "2.13.1"
+ThisBuild / scalaVersion := Versions.scala213
 ThisBuild / organization := "com.astutebits"
 ThisBuild / javacOptions ++= Seq(
   "-encoding", "UTF-8",
@@ -23,8 +23,9 @@ ThisBuild / scalacOptions ++= Seq(
 lazy val root = (project in file("."))
     .enablePlugins(DockerComposePlugin)
     .settings(
-      name := "akka-persistence-r2dbc",
+      name := "akka-persistence-r2dbc-root",
       skip in publish := true,
+      crossScalaVersions := Nil,
 
       // We are only using DockerCompose for testing.
       dockerImageCreationTask := ""
@@ -33,18 +34,18 @@ lazy val root = (project in file("."))
 
 lazy val core = Project(id = "core", base = file("core"))
     .settings(
-      name := "akka-persistence-r2dbc-core",
-      skip in publish := false,
-      libraryDependencies ++= Dependencies.Core
+      name := "akka-persistence-r2dbc",
+      libraryDependencies ++= Dependencies.Core,
+      crossScalaVersions := Versions.supportedScala
     )
     .settings(fork in Test := true)
 
 lazy val postgresql = Project(id = "postgresql", base = file("postgresql"))
     .settings(
       name := "akka-persistence-postgresql",
-      libraryDependencies ++= Dependencies.PostgreSQL
-    )
-    .settings(
+      libraryDependencies ++= Dependencies.PostgreSQL,
+      crossScalaVersions := Versions.supportedScala,
+
       fork in Test := true,
       parallelExecution in Test := false
     )
@@ -53,9 +54,9 @@ lazy val postgresql = Project(id = "postgresql", base = file("postgresql"))
 lazy val mysql = Project(id = "mysql", base = file("mysql"))
     .settings(
       name := "akka-persistence-mysql",
-      libraryDependencies ++= Dependencies.MySQL
-    )
-    .settings(
+      libraryDependencies ++= Dependencies.MySQL,
+      crossScalaVersions := Versions.supportedScala,
+
       fork in Test := true,
       parallelExecution in Test := false
     )
@@ -65,7 +66,8 @@ lazy val tck = Project(id = "tck", base = file("tck"))
     .settings(
       name := "akka-persistence-tck",
       skip in publish := true,
-      libraryDependencies ++= Dependencies.TCK
+      libraryDependencies ++= Dependencies.TCK,
+      crossScalaVersions := Versions.supportedScala
     )
     .dependsOn(core)
 
@@ -73,7 +75,8 @@ lazy val `perf-tests` = Project(id = "perf-tests", base = file("perf-tests"))
     .settings(
       name := "akka-persistence-r2dbc-perf-tests",
       skip in publish := true,
-      libraryDependencies ++= Dependencies.Perf
+      libraryDependencies ++= Dependencies.Perf,
+      crossScalaVersions := Versions.supportedScala
     )
     .settings(fork in Test := true)
     .dependsOn(postgresql, mysql)

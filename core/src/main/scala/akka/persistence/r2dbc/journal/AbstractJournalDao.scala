@@ -20,7 +20,8 @@ import akka.NotUsed
 import akka.stream.scaladsl.Source
 import java.lang.{Integer => JInt, Long => JLong}
 import java.util.{List => JList}
-import scala.jdk.CollectionConverters._
+//import scala.jdk.CollectionConverters._
+import collection.JavaConverters._
 
 /**
  * Java API.

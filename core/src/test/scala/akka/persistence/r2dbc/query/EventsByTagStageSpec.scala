@@ -27,8 +27,9 @@ import org.mockito.{ArgumentMatchersSugar, IdiomaticMockito}
 import org.scalatest.BeforeAndAfterAll
 import org.scalatest.flatspec.AnyFlatSpecLike
 import org.scalatest.matchers.should.Matchers
+
+import scala.collection.immutable.Seq
 import scala.concurrent.duration._
-import scala.util.Random
 
 /**
  * Test case for [[EventsByTagStage]].
@@ -67,12 +68,11 @@ final class EventsByTagStageSpec
   }
 
   it should "throw an exception when 'offset' is negative" in {
-    val r = new Random()
     for {
       _ <- 0 to 10
     } yield {
       a[IllegalArgumentException] should be thrownBy {
-        EventsByTagStage(dao, "tag", r.between(Int.MinValue, 0), Some(100.millis))
+        EventsByTagStage(dao, "tag", randomBetween(Int.MinValue, 0), Some(100.millis))
       }
     }
   }

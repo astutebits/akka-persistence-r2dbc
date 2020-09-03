@@ -40,7 +40,7 @@ import java.util.stream.Collectors;
 import org.reactivestreams.Publisher;
 import reactor.core.publisher.Flux;
 import reactor.util.function.Tuple2;
-import scala.jdk.javaapi.CollectionConverters;
+import scala.collection.JavaConverters;
 
 /**
  * A {@link JournalDao} for PostgreSQL with <strong>r2dbc-postgresql</strong>
@@ -60,7 +60,7 @@ final class PostgreSqlJournalDao extends AbstractJournalDao {
     Flux<Integer> flux = r2dbc.inTransaction(handle ->
         handle.executeQuery(insertEventsQuery(events), result -> ResultUtils.toSeqId(result, "id"))
             .zipWithIterable(events.stream()
-                .map(event -> CollectionConverters.asJava(event.tags()))
+                .map(event -> JavaConverters.setAsJavaSet(event.tags()))
                 .collect(Collectors.toList())
             )
             .collectList()

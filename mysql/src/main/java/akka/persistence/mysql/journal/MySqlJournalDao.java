@@ -41,7 +41,7 @@ import org.reactivestreams.Publisher;
 import reactor.core.publisher.Flux;
 import reactor.util.function.Tuple2;
 import reactor.util.function.Tuples;
-import scala.jdk.javaapi.CollectionConverters;
+import scala.collection.JavaConverters;
 
 /**
  * A {@link JournalDao} for MySQL with <strong>r2dbc-mysql</strong>
@@ -70,7 +70,7 @@ final class MySqlJournalDao extends AbstractJournalDao {
             .flatMap(idx -> {
               AtomicLong index = new AtomicLong(idx);
               return Flux.fromStream(events.stream().map(entry ->
-                  Tuples.of(index.getAndIncrement(), CollectionConverters.asJava(entry.tags())))
+                  Tuples.of(index.getAndIncrement(), JavaConverters.setAsJavaSet(entry.tags())))
               );
             })
             .collectList()
