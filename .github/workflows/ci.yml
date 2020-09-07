@@ -21,5 +21,12 @@ jobs:
         uses: docker://chmodas/docker-scala-sbt:11
       - name: Checkout the code
         uses: actions/checkout@v1
-      - name: Build and test
-        run: sbt "dockerComposeUp;test;dockerComposeStop"
+      - name: Start the Docker containers
+        run: sbt dockerComposeUp
+      - name: Build and test with 2.12.x
+        run: sbt ++2.12.12 test
+      - name: Build and test with 2.13.x
+        run: sbt ++2.13.3 test
+      - name: Stop the Docker containers
+        run: sbt dockerComposeStop
+
