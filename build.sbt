@@ -1,6 +1,5 @@
 import sbt.Keys.skip
 
-ThisBuild / version := "0.1.0"
 ThisBuild / scalaVersion := Versions.scala213
 ThisBuild / organization := "com.astutebits"
 ThisBuild / javacOptions ++= Seq(

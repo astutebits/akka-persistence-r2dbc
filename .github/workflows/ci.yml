@@ -4,6 +4,8 @@ on:
   push:
     branches:
       - master
+    tags:
+      - v*
   pull_request:
     branches:
       - master
@@ -29,4 +31,7 @@ jobs:
         run: sbt ++2.13.3 test
       - name: Stop the Docker containers
         run: sbt dockerComposeStop
+      - name: Publish
+        if: github.event_name != 'pull_request'
+        run: sbt -Dbintray.user=${{secrets.BINTRAY_USER}} -Dbintray.pass=${{secrets.BINTRAY_PASS}} publish
 
