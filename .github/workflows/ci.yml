@@ -32,6 +32,6 @@ jobs:
       - name: Stop the Docker containers
         run: sbt dockerComposeStop
       - name: Publish
-        if: github.event_name != 'pull_request'
+        if: ${{ github.event_name != 'pull_request' && github.event_name != 'schedule' }}
         run: sbt -Dbintray.user=${{secrets.BINTRAY_USER}} -Dbintray.pass=${{secrets.BINTRAY_PASS}} publish
 
