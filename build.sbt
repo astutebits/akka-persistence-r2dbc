@@ -15,6 +15,7 @@ lazy val root = (project in file("."))
 lazy val core = Project(id = "core", base = file("core"))
     .settings(
       name := "akka-persistence-r2dbc",
+      description := "Reactive Akka Journal, Snapshot Store, and Persistence Query plugin",
       libraryDependencies ++= Dependencies.Core,
       fork in Test := true
     )
@@ -23,6 +24,7 @@ lazy val postgresql = Project(id = "postgresql", base = file("postgresql"))
     .settings(
       name := "akka-persistence-postgresql",
       libraryDependencies ++= Dependencies.PostgreSQL,
+      description := "Reactive Akka Journal, Snapshot Store, and Persistence Query plugin for PostgreSQL",
 
       fork in Test := true,
       parallelExecution in Test := false
@@ -33,6 +35,7 @@ lazy val mysql = Project(id = "mysql", base = file("mysql"))
     .settings(
       name := "akka-persistence-mysql",
       libraryDependencies ++= Dependencies.MySQL,
+      description := "Reactive Akka Journal, Snapshot Store, and Persistence Query plugin for MySQL",
 
       fork in Test := true,
       parallelExecution in Test := false
