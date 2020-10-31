@@ -31,7 +31,10 @@ jobs:
         run: sbt ++2.13.3 test
       - name: Stop the Docker containers
         run: sbt dockerComposeStop
-      - name: Publish
+      - name: Publish 2.12.x
         if: ${{ github.event_name != 'pull_request' && github.event_name != 'schedule' }}
-        run: sbt -Dbintray.user=${{secrets.BINTRAY_USER}} -Dbintray.pass=${{secrets.BINTRAY_PASS}} publish
+        run: sbt ++2.12.12 -Dbintray.user=${{secrets.BINTRAY_USER}} -Dbintray.pass=${{secrets.BINTRAY_PASS}} publish
+      - name: Publish 2.13.x
+        if: ${{ github.event_name != 'pull_request' && github.event_name != 'schedule' }}
+        run: sbt ++2.13.3 -Dbintray.user=${{secrets.BINTRAY_USER}} -Dbintray.pass=${{secrets.BINTRAY_PASS}} publish
 
