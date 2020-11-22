@@ -80,7 +80,7 @@ abstract class ReadJournalSpec(config: Config)
     senderProbe.expectMsg(WriteMessagesSuccessful)
     (fromSnr until toSnr).foreach { i =>
       senderProbe.expectMsgPF() {
-        case WriteMessageSuccess(PersistentImpl(payload, `i`, `pId`, _, _, _, _, _), _) =>
+        case WriteMessageSuccess(PersistentImpl(payload, `i`, `pId`, _, _, _, _, _, _), _) =>
           tags match {
             case set if set.nonEmpty => payload should be(Tagged(s"$pId-$i", set))
             case _ => payload should be(s"$pId-$i")
