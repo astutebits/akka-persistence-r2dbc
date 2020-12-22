@@ -22,11 +22,12 @@ import akka.stream.scaladsl.Source
 trait JournalDao {
 
   /**
-   * Persists the journal events and any associated tags atomically and returns a single [[Unit]]
-   * in the [[Source]].
+   * Persists the journal events, any associated tags and projections atomically. A single [[Int]]
+   * in the [[Source]] confirms a successful outcome. Otherwise, if an error occurs saving the data,
+   * all changes are rolled back and the [[Source]] terminates with an error.
    *
    * @param events the journal entries
-   * @return a [[Source]] with a single [[Unit]]
+   * @return a [[Source]] with a single [[Int]]
    */
   def writeEvents(events: Seq[JournalEntry]): Source[Int, NotUsed]
 
