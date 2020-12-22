@@ -27,11 +27,14 @@ import scala.collection.JavaConverters._
 
 private[journal] object PostgreSqlJournalQueries {
 
-  def insertEventsQuery(entries: JList[JournalEntry]): String =
-    "INSERT INTO event (id, persistence_id, sequence_nr, timestamp, payload, manifest, ser_id, ser_manifest, writer_uuid) VALUES " + entries.asScala
+  def insertEntriesQuery(entries: JList[JournalEntry]): String = {
+    val projections = entries.asScala.flatMap(it => it.projected).reduceOption(_ + ";" + _)
+    val events = "INSERT INTO event (id, persistence_id, sequence_nr, timestamp, payload, manifest, ser_id, ser_manifest, writer_uuid) VALUES " + entries.asScala
         .map(it => s"(DEFAULT, '${it.persistenceId}', ${it.sequenceNr}, ${it.timestamp}, '\\x${hexDump(it.event)}', " +
             s"'${it.eventManifest}', ${it.serId}, '${it.serManifest}', '${it.writerUuid}')")
         .reduce(_ + "," + _) + " RETURNING id;"
+    projections.fold(events)(_ + ";" + events)
+  }
 
   def insertTagsQuery(items: JList[Tuple2[JLong, JSet[String]]]): String =
     "INSERT INTO tag (id, event_id, tag) VALUES " + items.asScala

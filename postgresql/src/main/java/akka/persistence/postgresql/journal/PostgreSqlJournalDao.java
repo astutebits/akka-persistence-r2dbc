@@ -20,7 +20,7 @@ import static akka.persistence.postgresql.journal.PostgreSqlJournalQueries.delet
 import static akka.persistence.postgresql.journal.PostgreSqlJournalQueries.findEventsQuery;
 import static akka.persistence.postgresql.journal.PostgreSqlJournalQueries.highestMarkedSeqNrQuery;
 import static akka.persistence.postgresql.journal.PostgreSqlJournalQueries.highestSeqNrQuery;
-import static akka.persistence.postgresql.journal.PostgreSqlJournalQueries.insertEventsQuery;
+import static akka.persistence.postgresql.journal.PostgreSqlJournalQueries.insertEntriesQuery;
 import static akka.persistence.postgresql.journal.PostgreSqlJournalQueries.insertTagsQuery;
 import static akka.persistence.postgresql.journal.PostgreSqlJournalQueries.markEventsAsDeletedQuery;
 import static akka.persistence.r2dbc.journal.ResultUtils.toSeqId;
@@ -58,7 +58,7 @@ final class PostgreSqlJournalDao extends AbstractJournalDao {
   @Override
   public Source<Integer, NotUsed> doWriteEvents(List<JournalEntry> events) {
     Flux<Integer> flux = r2dbc.inTransaction(handle ->
-        handle.executeQuery(insertEventsQuery(events), result -> ResultUtils.toSeqId(result, "id"))
+        handle.executeQuery(insertEntriesQuery(events), result -> ResultUtils.toSeqId(result, "id"))
             .zipWithIterable(events.stream()
                 .map(event -> JavaConverters.setAsJavaSet(event.tags()))
                 .collect(Collectors.toList())

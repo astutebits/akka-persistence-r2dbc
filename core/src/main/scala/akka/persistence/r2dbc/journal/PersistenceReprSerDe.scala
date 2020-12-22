@@ -22,43 +22,23 @@ import akka.serialization.{Serialization, Serializers}
 import scala.collection.immutable.Set
 import scala.util.Try
 
-private[akka] object PersistenceReprSerDe {
-
-  private def encodeTags(payload: Any): Set[String] = payload match {
-    case Tagged(_, tags) => tags
-    case _ => Set.empty
-  }
-
-}
-
 private[akka] final class PersistenceReprSerDe(serialization: Serialization) {
 
-  import PersistenceReprSerDe._
-
-  def serialize(persistentRepr: PersistentRepr): Try[JournalEntry] = Try {
-    val event = (persistentRepr.payload match {
-      case Tagged(payload, _) => persistentRepr.withPayload(payload)
-      case _ => persistentRepr
-    }).payload.asInstanceOf[AnyRef]
+  def serialize(repr: PersistentRepr): Try[JournalEntry] = Try {
+    val (event: AnyRef, tags: Set[String], projection: Option[String]) = repr.payload match {
+      case Projected(Tagged(payload, tags), projection) => (payload, tags, Some(projection))
+      case Projected(payload, projection) => (payload, Set.empty, Some(projection))
+      case Tagged(Projected(payload, projection), tags) => (payload, tags, Some(projection))
+      case Tagged(payload, tags) => (payload, tags, None)
+      case _ => (repr.payload, Set.empty, None)
+    }
 
     val serializer = serialization.findSerializerFor(event)
     val manifest = Serializers.manifestFor(serializer, event)
 
-    (event, serializer.identifier, manifest)
-  } flatMap { case (event, serId, serManifest) =>
-    serialization.serialize(event).map(bytes => JournalEntry(
-      Long.MinValue,
-      persistentRepr.persistenceId,
-      persistentRepr.sequenceNr,
-      bytes,
-      persistentRepr.writerUuid,
-      persistentRepr.manifest,
-      persistentRepr.timestamp,
-      serId,
-      serManifest,
-      encodeTags(persistentRepr.payload),
-      persistentRepr.deleted
-    ))
+    (event, tags, projection, serializer.identifier, manifest)
+  } flatMap { case (event, tags, projection, serId, typeHint) =>
+    serialization.serialize(event).map(JournalEntry(repr, serId, typeHint, _, tags, projection))
   }
 
   def deserialize(entry: JournalEntry): Try[PersistentRepr] =

@@ -16,10 +16,44 @@
 
 package akka.persistence.r2dbc.journal
 
+import akka.persistence.PersistentRepr
 import java.lang.{Integer => JInt, Long => JLong}
 import java.time.Instant
 
 private[akka] object JournalEntry {
+
+  /**
+   * Extends a journal message with Tagging and Atomic Projections,
+   * the outcome of [[PersistenceReprSerDe.serialize()]] call.
+   *
+   * @param repr Representation of a persistent message
+   * @param serId The ID of the serializer.
+   * @param serManifest The serializer type hint.
+   * @param bytes The serialized message payload.
+   * @param tags Optional tags for `ReadJournal` queries.
+   * @param projection Optional projection to write atomically when persisting the message entry.
+   */
+  def apply(
+      repr: PersistentRepr,
+      serId: Int,
+      serManifest: String,
+      bytes: Array[Byte],
+      tags: Set[String],
+      projection: Option[String]
+  ): JournalEntry = JournalEntry(
+    Long.MinValue,
+    repr.persistenceId,
+    repr.sequenceNr,
+    bytes,
+    repr.writerUuid,
+    repr.manifest,
+    repr.timestamp,
+    serId,
+    serManifest,
+    tags,
+    repr.deleted,
+    projection
+  )
 
   def of(
       index: JLong,
@@ -75,5 +109,6 @@ private[akka] final case class JournalEntry(
     serId: Int = 0,
     serManifest: String = "",
     tags: Set[String] = Set.empty,
-    deleted: Boolean = false
+    deleted: Boolean = false,
+    projected: Option[String] = None
 )

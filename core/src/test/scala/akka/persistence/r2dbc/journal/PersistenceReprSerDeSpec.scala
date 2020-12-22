@@ -18,17 +18,22 @@ package akka.persistence.r2dbc.journal
 
 import akka.actor.{ActorSystem, ExtendedActorSystem}
 import akka.persistence.PersistentRepr
+import akka.persistence.journal.Tagged
 import akka.persistence.r2dbc.journal.PersistenceReprSerDeSpec.{Message1, Test}
 import akka.serialization.{Serialization, SerializerWithStringManifest}
 import com.typesafe.config.ConfigFactory
 import org.scalatest.flatspec.AnyFlatSpecLike
 import org.scalatest.matchers.should.Matchers
 
+import scala.collection.immutable
+
 
 object PersistenceReprSerDeSpec {
 
   sealed trait Protocol
+
   case class Message1(str: String) extends Protocol
+
   case class Message2(str: String) extends Protocol
 
   class TestSerializer(val system: ExtendedActorSystem) extends SerializerWithStringManifest {
@@ -79,26 +84,80 @@ final class PersistenceReprSerDeSpec
 
   private val serializer = new PersistenceReprSerDe(new Serialization(system))
 
-  "PersistenceReprSerDe" should "serialize and deserialize entries" in {
-    val persistentRepr = PersistentRepr(Message1("abc"), 123, "foo", "manifest")
+  private def assertSerDe(repr: PersistentRepr, additionallyAssert: JournalEntry => Unit): Unit = {
+    val serialized = serializer.serialize(repr) getOrElse fail(s"Cannot serialize $repr")
+    val deserialized = serializer.deserialize(serialized) getOrElse fail(s"Cannot deserialize $serialized")
 
-    val serialized = serializer.serialize(persistentRepr)
-    serialized should be a Symbol("success")
+    assert(repr.persistenceId == serialized.persistenceId
+        && serialized.persistenceId == deserialized.persistenceId)
+    assert(repr.sequenceNr == serialized.sequenceNr
+        && serialized.sequenceNr == deserialized.sequenceNr)
+    assert(repr.manifest == serialized.eventManifest
+        && serialized.eventManifest == deserialized.manifest)
 
-    val x = serialized.get
-    x.persistenceId shouldBe "foo"
-    x.sequenceNr shouldBe 123
-    x.eventManifest shouldBe "manifest"
-    x.serId shouldBe 10000
-    x.serManifest shouldBe "1"
+    serialized.serId shouldBe 10000
 
-    val deserialized = serializer.deserialize(x)
-    deserialized should be a Symbol("success")
+    additionallyAssert(serialized)
+  }
 
-    val y = deserialized.get
-    y.persistenceId shouldBe "foo"
-    y.sequenceNr shouldBe 123
-    y.manifest shouldBe "manifest"
+  "PersistenceReprSerDe" should "serialize and deserialize message" in {
+    val persistentRepr = PersistentRepr(
+      payload = Message1("abc"),
+      sequenceNr = 123, persistenceId = "foo", manifest = "manifest"
+    )
+    assertSerDe(persistentRepr, it => {
+      it.serManifest shouldBe "1"
+      it.tags shouldBe immutable.Set.empty[String]
+      it.projected shouldBe None
+    })
+  }
+
+  it should "serialize and deserialize Tagged" in {
+    val persistentRepr = PersistentRepr(
+      payload = Tagged(Message1("abc"), immutable.Set("tag")),
+      sequenceNr = 123, persistenceId = "foo", manifest = "manifest"
+    )
+    assertSerDe(persistentRepr, it => {
+      it.serManifest shouldBe "1"
+      it.tags shouldBe immutable.Set("tag")
+      it.projected shouldBe None
+    })
+  }
+
+  it should "serialize and deserialize Projected" in {
+    val persistentRepr = PersistentRepr(
+      payload = Projected(Message1("abc"), "INSERT INTO"),
+      sequenceNr = 123, persistenceId = "foo", manifest = "manifest"
+    )
+    assertSerDe(persistentRepr, it => {
+      it.serManifest shouldBe "1"
+      it.tags shouldBe immutable.Set.empty[String]
+      it.projected shouldBe Some("INSERT INTO")
+    })
+  }
+
+  it should "serialize and deserialize Tagged(Projected)" in {
+    val persistentRepr = PersistentRepr(
+      payload = Tagged(Projected(Message1("abc"), "INSERT INTO"), immutable.Set("tag")),
+      sequenceNr = 123, persistenceId = "foo", manifest = "manifest"
+    )
+    assertSerDe(persistentRepr, it => {
+      it.serManifest shouldBe "1"
+      it.tags shouldBe immutable.Set("tag")
+      it.projected shouldBe Some("INSERT INTO")
+    })
+  }
+
+  it should "serialize and deserialize Projected(Tagged)" in {
+    val persistentRepr = PersistentRepr(
+      payload = Projected(Tagged(Message1("abc"), immutable.Set("tag")), "INSERT INTO"),
+      sequenceNr = 123, persistenceId = "foo", manifest = "manifest"
+    )
+    assertSerDe(persistentRepr, it => {
+      it.serManifest shouldBe "1"
+      it.tags shouldBe immutable.Set("tag")
+      it.projected shouldBe Some("INSERT INTO")
+    })
   }
 
   it should "catch serialization errors" in {

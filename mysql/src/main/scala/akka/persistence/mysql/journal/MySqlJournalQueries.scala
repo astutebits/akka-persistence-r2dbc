@@ -27,11 +27,14 @@ import scala.collection.JavaConverters._
 
 private[journal] object MySqlJournalQueries {
 
-  def insertEventsQuery(entries: JList[JournalEntry]): String =
-    "INSERT INTO event (persistence_id, sequence_nr, timestamp, payload, manifest, ser_id, ser_manifest, writer_uuid) VALUES " + entries.asScala
+  def insertEventsQuery(entries: JList[JournalEntry]): String = {
+    val projections = entries.asScala.flatMap(it => it.projected).reduceOption(_ + ";" + _)
+    val events = "INSERT INTO event (persistence_id, sequence_nr, timestamp, payload, manifest, ser_id, ser_manifest, writer_uuid) VALUES " + entries.asScala
         .map(it => s"('${it.persistenceId}', ${it.sequenceNr}, ${it.timestamp}, x'${ByteBufUtil.hexDump(it.event)}', " +
             s"'${it.eventManifest}', ${it.serId}, '${it.serManifest}', '${it.writerUuid}')")
         .reduce(_ + "," + _)
+    projections.fold(events)(_ + ";" + events)
+  }
 
   def insertTagsQuery(items: JList[Tuple2[JLong, JSet[String]]]): String =
     "INSERT INTO tag (event_id, tag) VALUES " + items.asScala

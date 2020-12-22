@@ -33,27 +33,27 @@ object MySqlJournalSpec {
   )
 }
 final class MySqlJournalSpec
-    extends JournalSpec(config = MySqlJournalSpec.JournalPluginConfig) with Eventually {
+    extends JournalSpec(config = MySqlJournalSpec.JournalPluginConfig)
+        with Eventually with ProjectionExtensionSpec {
+
+  override protected val r2dbc: R2dbc = new R2dbc(
+    MySqlConnectionFactory.from(MySqlConnectionConfiguration.builder()
+        .host("localhost")
+        .username("root")
+        .password("s3cr3t")
+        .database("db")
+        .build())
+  )
 
   override def beforeAll(): Unit = {
     eventually(timeout(60.seconds), interval(1.second)) {
-      val r2dbc = new R2dbc(
-        MySqlConnectionFactory.from(MySqlConnectionConfiguration.builder()
-            .host("localhost")
-            .username("root")
-            .password("s3cr3t")
-            .database("db")
-            .build())
-      )
-      r2dbc.withHandle(handle =>
-        handle.executeQuery("DELETE FROM event; DELETE FROM tag;", _.getRowsUpdated)
-      )
-          .blockLast()
+      r2dbc.withHandle(handle => handle.executeQuery("TRUNCATE TABLE event; TRUNCATE TABLE tag; " +
+          "CREATE TABLE IF NOT EXISTS projected (id varchar(255), value text);", _.getRowsUpdated
+      )).blockLast()
     }
 
     super.beforeAll()
   }
 
   override protected def supportsRejectingNonSerializableObjects: CapabilityFlag = true
-
 }
