@@ -22,9 +22,9 @@ import akka.serialization.SerializationExtension
 import akka.stream.Materializer
 import akka.stream.scaladsl.{Sink, Source}
 import java.util.{HashMap => JHMap, Map => JMap}
+import scala.collection.immutable.Seq
 import scala.concurrent.{ExecutionContextExecutor, Future}
 import scala.util.Try
-import scala.collection.immutable
 
 /**
  * A mixin with the journal logic (separated from [[ReactiveJournal]] to make testing easier).
@@ -32,44 +32,39 @@ import scala.collection.immutable
 trait JournalLogic {
 
   implicit val system: ActorSystem
-  lazy val serializer = new PersistenceReprSerDe(SerializationExtension(system))
+
+  lazy val reprSerDe = new PersistenceReprSerDe(SerializationExtension(system))
 
   private lazy implicit val mat: Materializer = Materializer(system)
   private lazy implicit val ec: ExecutionContextExecutor = system.dispatcher
   protected val dao: JournalDao
-  private val writeInProgress: JMap[String, Future[Unit]] = new JHMap
+  private val writeInProgress: JMap[String, Future[Any]] = new JHMap
 
-  def asyncWriteMessages(messages: immutable.Seq[AtomicWrite]): Future[immutable.Seq[Try[Unit]]] = {
-    val serializedTries: immutable.Seq[Try[immutable.Seq[JournalEntry]]] = messages.map { atomicWrite =>
+  def asyncWriteMessages(messages: Seq[AtomicWrite]): Future[Seq[Try[Unit]]] = {
+    val asyncSerialized: Seq[Future[Try[Seq[JournalEntry]]]] = messages.map { atomicWrite =>
       // Since all PersistentRepr are persisted atomically they all get the same timestamp
       val now = System.currentTimeMillis()
-      val serialized = atomicWrite.payload.map(pr => serializer.serialize(pr.withTimestamp(now)))
-      TrySeq.flatten(serialized)
+      val serialized = atomicWrite.payload.map(pr => reprSerDe.serialize(pr.withTimestamp(now)))
+      Future.sequence(serialized).map(TryUtil.flatten)
     }
 
-    // If serialization fails for some AtomicWrites, the other AtomicWrites may still be written
-    val entriesToWrite: immutable.Seq[JournalEntry] = for {
-      serializeTry: Try[immutable.Seq[JournalEntry]] <- serializedTries
-      row: JournalEntry <- serializeTry.getOrElse(immutable.Seq.empty)
-    } yield row
+    val future = Source.future(Future.sequence(asyncSerialized))
+        .flatMapConcat((serializedTries: Seq[Try[Seq[JournalEntry]]]) => {
+          val entriesToWrite: Seq[JournalEntry] = for {
+            serializeTry: Try[Seq[JournalEntry]] <- serializedTries
+            row: JournalEntry <- serializeTry.getOrElse(Seq.empty)
+          } yield row
+          dao.writeEvents(entriesToWrite).map(_ => TryUtil.writeCompleteSignal(serializedTries))
+        })
+        .runWith(Sink.last)
 
     val pid = messages.head.persistenceId
-
-    val future: Future[Unit] = Source(List(entriesToWrite))
-        .flatMapConcat(events => dao.writeEvents(events))
-        .map(_ => ())
-        .runWith(Sink.last[Unit])
-
     writeInProgress.put(pid, future)
-    future.map(_ => TrySeq.writeCompleteSignal(serializedTries))
-        .andThen{case _ => writeInProgress.remove(pid)}
+    future.andThen { case _ => writeInProgress.remove(pid) }
   }
 
-  def asyncDeleteMessagesTo(persistenceId: String, toSequenceNr: Long): Future[Unit] = {
-    dao.deleteEvents(persistenceId, toSequenceNr)
-        .map(_ => ())
-        .runWith(Sink.last) // Wait for the transaction commit and the connection to be closed
-  }
+  def asyncDeleteMessagesTo(persistenceId: String, toSequenceNr: Long): Future[Unit] =
+    dao.deleteEvents(persistenceId, toSequenceNr).map(_ => ()).runWith(Sink.last)
 
   def asyncReplayMessages(
       persistenceId: String,
@@ -79,7 +74,7 @@ trait JournalLogic {
   )(recoveryCallback: PersistentRepr => Unit): Future[Unit] = {
     // TODO: Protect the fetchEvents call with a circuit-breaker
     dao.fetchEvents(persistenceId, fromSequenceNr, toSequenceNr, max)
-        .mapAsync(1)(event => Future.fromTry(serializer.deserialize(event)))
+        .mapAsync(1)(entry => reprSerDe.deserialize(entry).flatMap(Future.fromTry))
         .runForeach(repr => recoveryCallback(repr))
         .map(_ => ())
   }
@@ -91,10 +86,8 @@ trait JournalLogic {
           .runWith(Sink.last)
 
     writeInProgress.get(persistenceId) match {
-      case null =>
-        go(persistenceId, fromSequenceNr)
-      case f =>
-        f.flatMap(_ => go(persistenceId, fromSequenceNr))
+      case null => go(persistenceId, fromSequenceNr)
+      case f => f.flatMap(_ => go(persistenceId, fromSequenceNr))
     }
   }
 

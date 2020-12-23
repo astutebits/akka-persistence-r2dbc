@@ -6,6 +6,7 @@ has a few additional extensions documented below.
 
 ## Extensions
 
+* `akka.serialization.AsyncSerializer` support 
 * `Atomic Projections` gives you the ability to persist an event and run
   projections for a "local" read-side in an atomic transaction.
 

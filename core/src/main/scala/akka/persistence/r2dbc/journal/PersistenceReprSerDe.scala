@@ -18,13 +18,15 @@ package akka.persistence.r2dbc.journal
 
 import akka.persistence.PersistentRepr
 import akka.persistence.journal.Tagged
-import akka.serialization.{Serialization, Serializers}
+import akka.serialization.{AsyncSerializer, Serialization, Serializers}
 import scala.collection.immutable.Set
+import scala.concurrent.{ExecutionContext, Future}
 import scala.util.Try
 
-private[akka] final class PersistenceReprSerDe(serialization: Serialization) {
 
-  def serialize(repr: PersistentRepr): Try[JournalEntry] = Try {
+private[akka] final class PersistenceReprSerDe(serialization: Serialization)(implicit ec: ExecutionContext) {
+
+  def serialize(repr: PersistentRepr): Future[Try[JournalEntry]] = TryUtil.futureTry(() => Future {
     val (event: AnyRef, tags: Set[String], projection: Option[String]) = repr.payload match {
       case Projected(Tagged(payload, tags), projection) => (payload, tags, Some(projection))
       case Projected(payload, projection) => (payload, Set.empty, Some(projection))
@@ -36,20 +38,37 @@ private[akka] final class PersistenceReprSerDe(serialization: Serialization) {
     val serializer = serialization.findSerializerFor(event)
     val manifest = Serializers.manifestFor(serializer, event)
 
-    (event, tags, projection, serializer.identifier, manifest)
-  } flatMap { case (event, tags, projection, serId, typeHint) =>
-    serialization.serialize(event).map(JournalEntry(repr, serId, typeHint, _, tags, projection))
-  }
+    (event, tags, projection, serializer, manifest)
+  } flatMap { case (event, tags, projection, serializer, manifest) =>
+    val future = serializer match {
+      case asyncSer: AsyncSerializer => withTransportInformation(() => asyncSer.toBinaryAsync(event))
+      case sync => Future(withTransportInformation(() => sync.toBinary(event)))
+    }
+    future.map(JournalEntry(repr, serializer.identifier, manifest, _, tags, projection))
+  })
 
-  def deserialize(entry: JournalEntry): Try[PersistentRepr] =
-    serialization
-        .deserialize(entry.event, entry.serId, entry.serManifest)
-        .map(payload => PersistentRepr(
-          payload,
+  def deserialize(entry: JournalEntry): Future[Try[PersistentRepr]] = {
+    val deserialized = serialization.serializerByIdentity.get(entry.serId) match {
+      case Some(asyncSer: AsyncSerializer) => TryUtil.futureTry(() =>
+        withTransportInformation(() => asyncSer.fromBinaryAsync(entry.event, entry.serManifest))
+      )
+      case _ => Future(serialization.deserialize(entry.event, entry.serId, entry.serManifest))
+    }
+
+    deserialized map { payload =>
+      payload.map(pr =>
+        PersistentRepr(
+          pr,
           persistenceId = entry.persistenceId,
           sequenceNr = entry.sequenceNr,
           manifest = entry.eventManifest,
           writerUuid = entry.writerUuid
         ))
+    }
+  }
+
+  private def withTransportInformation[T](f: () => T): T = {
+    Serialization.withTransportInformation(serialization.system)(f)
+  }
 
 }

@@ -29,6 +29,8 @@ import org.scalatest.flatspec.AsyncFlatSpecLike
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.{BeforeAndAfterAll, TryValues}
 import scala.collection.immutable.Seq
+import scala.concurrent.Await
+import scala.concurrent.duration.Duration
 
 final class ReactiveJournalSpec
     extends AsyncFlatSpecLike
@@ -144,8 +146,9 @@ final class ReactiveJournalSpec
 
   it should "replay messages as requested" in {
     mockDao.fetchEvents("foo", 1, 2, 2) returns Source(
-      Seq(journal.serializer.serialize(PersistentRepr(Tagged("foo", Set("FooTag", "FooTagTwo")), 1L, "foo")).map(_.copy(id = 1L)),
-        journal.serializer.serialize(PersistentRepr(Tagged("foo", Set("FooTag", "FooTagTwo")), 2L, "foo")).map(_.copy(id = 5L)))
+      Seq(
+        Await.result(journal.reprSerDe.serialize(PersistentRepr(Tagged("foo", Set("FooTag", "FooTagTwo")), 1L, "foo")), Duration.Inf).map(_.copy(id = 1L)),
+        Await.result(journal.reprSerDe.serialize(PersistentRepr(Tagged("foo", Set("FooTag", "FooTagTwo")), 2L, "foo")), Duration.Inf).map(_.copy(id = 5L)))
     )
         .map(_.get)
 
