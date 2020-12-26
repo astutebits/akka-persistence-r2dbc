@@ -16,36 +16,26 @@
 
 package akka.persistence.r2dbc.client
 
-import akka.actor.ActorSystem
-import akka.stream.Materializer
-import akka.stream.scaladsl.Source
-import akka.stream.testkit.scaladsl.TestSink
-import akka.testkit.TestKit
 import io.r2dbc.spi.test.{MockConnection, MockConnectionFactory}
-import org.scalatest.BeforeAndAfterAll
 import org.scalatest.flatspec.AnyFlatSpecLike
 import org.scalatest.matchers.should.Matchers
 import reactor.core.publisher.{Flux, Mono}
+import reactor.test.StepVerifier
 
-final class R2dbcSpec extends AnyFlatSpecLike with Matchers with BeforeAndAfterAll {
-
-  private implicit val system: ActorSystem = ActorSystem()
-  private implicit val mat: Materializer = Materializer(system)
-
-  override def afterAll(): Unit = {
-    TestKit.shutdownActorSystem(system)
-  }
+/**
+ * Test case for [[R2dbc]].
+ */
+final class R2dbcSpec extends AnyFlatSpecLike with Matchers {
 
   "R2dbc" should "open and close the connection if successful withHandle execution" in {
     val connection = MockConnection.empty
     val connectionFactory = MockConnectionFactory.builder.connection(connection).build
     val r2dbc = new R2dbc(connectionFactory)
 
-    Source.fromPublisher[Int](r2dbc.withHandle(_ => Flux.just(1, 2)))
-        .runWith(TestSink.probe[Int])
-        .requestNext(1)
-        .requestNext(2)
-        .expectComplete()
+    StepVerifier.create(r2dbc.withHandle(_ => Flux.just(1, 2)))
+        .expectNext(1)
+        .expectNext(2)
+        .verifyComplete()
 
     connection.isCloseCalled shouldBe true
   }
@@ -55,9 +45,9 @@ final class R2dbcSpec extends AnyFlatSpecLike with Matchers with BeforeAndAfterA
     val connectionFactory = MockConnectionFactory.builder.connection(connection).build
     val r2dbc = new R2dbc(connectionFactory)
 
-    Source.fromPublisher[Int](r2dbc.withHandle(_ => Mono.error(new IllegalArgumentException("Boom"))))
-        .runWith(TestSink.probe[Int])
-        .expectSubscriptionAndError()
+    StepVerifier.create(r2dbc.withHandle(_ => Mono.error[Int](new IllegalArgumentException("BOOM!"))))
+        .expectErrorMessage("BOOM!")
+        .verify()
 
     connection.isCloseCalled shouldBe true
   }
@@ -67,11 +57,10 @@ final class R2dbcSpec extends AnyFlatSpecLike with Matchers with BeforeAndAfterA
     val connectionFactory = MockConnectionFactory.builder.connection(connection).build
     val r2dbc = new R2dbc(connectionFactory)
 
-    Source.fromPublisher[Int](r2dbc.inTransaction(_ => Flux.just(1, 2)))
-        .runWith(TestSink.probe[Int])
-        .requestNext(1)
-        .requestNext(2)
-        .expectComplete()
+    StepVerifier.create(r2dbc.inTransaction(_ => Flux.just(1, 2)))
+        .expectNext(1)
+        .expectNext(2)
+        .verifyComplete()
 
     connection.isBeginTransactionCalled shouldBe true
     connection.isCommitTransactionCalled shouldBe true
@@ -83,9 +72,9 @@ final class R2dbcSpec extends AnyFlatSpecLike with Matchers with BeforeAndAfterA
     val connectionFactory = MockConnectionFactory.builder.connection(connection).build
     val r2dbc = new R2dbc(connectionFactory)
 
-    Source.fromPublisher[Int](r2dbc.inTransaction(_ => Mono.error(new IllegalArgumentException("Boom"))))
-        .runWith(TestSink.probe[Int])
-        .expectSubscriptionAndError()
+    StepVerifier.create(r2dbc.inTransaction(_ => Mono.error[Int](new IllegalArgumentException("BOOM!"))))
+        .expectErrorMessage("BOOM!")
+        .verify()
 
     connection.isBeginTransactionCalled shouldBe true
     connection.isRollbackTransactionCalled shouldBe true
