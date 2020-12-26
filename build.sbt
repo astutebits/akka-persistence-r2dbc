@@ -12,6 +12,13 @@ lazy val root = (project in file("."))
     )
     .aggregate(postgresql, mysql, core)
 
+lazy val `r2dbc-mini-client` = Project(id = "r2dbc-mini-client", base = file("r2dbc-mini-client"))
+    .settings(
+      name := "r2dbc-mini-client",
+      description := "Ultra-minimalistic client for R2DBC drivers.",
+      libraryDependencies ++= Dependencies.R2dbcClient
+    )
+
 lazy val core = Project(id = "core", base = file("core"))
     .settings(
       name := "akka-persistence-r2dbc",
@@ -19,6 +26,7 @@ lazy val core = Project(id = "core", base = file("core"))
       libraryDependencies ++= Dependencies.Core,
       fork in Test := true
     )
+    .dependsOn(`r2dbc-mini-client`)
 
 lazy val postgresql = Project(id = "postgresql", base = file("postgresql"))
     .settings(
@@ -29,7 +37,7 @@ lazy val postgresql = Project(id = "postgresql", base = file("postgresql"))
       fork in Test := true,
       parallelExecution in Test := false
     )
-    .dependsOn(core, tck % "test")
+    .dependsOn(core, `r2dbc-mini-client` % "test", tck % "test")
 
 lazy val mysql = Project(id = "mysql", base = file("mysql"))
     .settings(
@@ -40,7 +48,7 @@ lazy val mysql = Project(id = "mysql", base = file("mysql"))
       fork in Test := true,
       parallelExecution in Test := false
     )
-    .dependsOn(core, tck % "test")
+    .dependsOn(core, `r2dbc-mini-client` % "test", tck % "test")
 
 lazy val tck = Project(id = "tck", base = file("tck"))
     .settings(

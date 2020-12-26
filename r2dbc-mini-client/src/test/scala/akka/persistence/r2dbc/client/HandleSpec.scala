@@ -16,36 +16,23 @@
 
 package akka.persistence.r2dbc.client
 
-import akka.actor.ActorSystem
-import akka.stream.Materializer
-import akka.stream.scaladsl.Source
-import akka.stream.testkit.scaladsl.TestSink
-import akka.testkit.TestKit
 import io.r2dbc.spi.test._
-import org.scalatest.BeforeAndAfterAll
 import org.scalatest.flatspec.AnyFlatSpecLike
 import org.scalatest.matchers.should.Matchers
 import reactor.core.publisher.Mono
+import reactor.test.StepVerifier
 
-class HandleSpec extends AnyFlatSpecLike with Matchers with BeforeAndAfterAll {
+/**
+ * Test case for [[Handle]].
+ */
+final class HandleSpec extends AnyFlatSpecLike with Matchers {
 
-  private implicit val system: ActorSystem = ActorSystem()
-  private implicit val mat: Materializer = Materializer(system)
-
-  override def afterAll(): Unit = {
-    TestKit.shutdownActorSystem(system)
-  }
-
-  "FluxHandle" should "commit successful transaction" in {
+  "Handle" should "commit successful transaction" in {
     val connection = MockConnection.empty
 
-    val source = Source.fromPublisher(
-      new Handle(connection).inTransaction[Int](_ => Mono.just(100))
-    )
-
-    source.runWith(TestSink.probe[Int])
-        .requestNext(100)
-        .expectComplete()
+    StepVerifier.create(new Handle(connection).inTransaction(_ => Mono.just(100)))
+        .expectNext(100)
+        .verifyComplete()
 
     connection.isBeginTransactionCalled shouldBe true
     connection.isCommitTransactionCalled shouldBe true
@@ -55,12 +42,9 @@ class HandleSpec extends AnyFlatSpecLike with Matchers with BeforeAndAfterAll {
     val connection = MockConnection.empty
     val exception = new IllegalArgumentException("Boom")
 
-    val source = Source.fromPublisher(
-      new Handle(connection).inTransaction[Int](_ => Mono.error(exception))
-    )
-
-    source.runWith(TestSink.probe[Int])
-        .expectSubscriptionAndError(exception)
+    StepVerifier.create(new Handle(connection).inTransaction[Int](_ => Mono.error(exception)))
+        .expectErrorMessage(exception.getMessage)
+        .verify()
 
     connection.isBeginTransactionCalled shouldBe true
     connection.isRollbackTransactionCalled shouldBe true
@@ -81,17 +65,11 @@ class HandleSpec extends AnyFlatSpecLike with Matchers with BeforeAndAfterAll {
     val statement = MockStatement.builder.result(result).build()
     val connection = MockConnection.builder.statement(statement).build
 
-    val source = Source.fromPublisher(
-      new Handle(connection).executeQuery[Integer](
-        "SELECT id FROM table",
-        result => result.map((row, _) => row.get("id", classOf[Integer]))
-      )
-    )
-
-    source.runWith(TestSink.probe[Integer])
-        .requestNext(1)
-        .requestNext(2)
-        .expectComplete()
+    StepVerifier.create(new Handle(connection).executeQuery[Integer]("SELECT id FROM table",
+      result => result.map((row, _) => row.get("id", classOf[Integer]))))
+        .expectNext(1)
+        .expectNext(2)
+        .verifyComplete()
 
     connection.getCreateStatementSql shouldBe "SELECT id FROM table"
   }

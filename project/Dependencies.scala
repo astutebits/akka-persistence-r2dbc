@@ -26,14 +26,18 @@ object Dependencies {
     "com.typesafe.akka" %% "akka-persistence-tck" % Versions.akka % Test
   )
 
-  val Core: Seq[ModuleID] = Base ++ Seq(
-    "io.projectreactor" % "reactor-core" % Versions.reactor,
-    "com.typesafe.akka" %% "akka-persistence-query" % Versions.akka,
+  val R2dbcClient: Seq[ModuleID] = Base ++ Seq(
     "io.r2dbc" % "r2dbc-spi" % Versions.r2dbcSpi,
+    "io.projectreactor" % "reactor-core" % Versions.reactor,
+
+    "io.r2dbc" % "r2dbc-spi-test" % Versions.r2dbcSpi % Test
+  )
+
+  val Core: Seq[ModuleID] = Base ++ Seq(
+    "com.typesafe.akka" %% "akka-persistence-query" % Versions.akka,
     "io.r2dbc" % "r2dbc-pool" % Versions.r2dbcPool,
 
     "org.mockito" %% "mockito-scala-scalatest" % Versions.mockito % Test,
-    "io.r2dbc" % "r2dbc-spi-test" % Versions.r2dbcSpi % Test,
     "com.typesafe.akka" %% "akka-stream-testkit" % Versions.akka % Test
   )
 
