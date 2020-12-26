@@ -15,11 +15,12 @@
  */
 
 package akka.persistence.r2dbc.journal
-import scala.collection.immutable.Seq
 
+import scala.collection.immutable.Seq
+import scala.concurrent.{ExecutionContext, Future}
 import scala.util.{Failure, Success, Try}
 
-private[akka] object TrySeq {
+private[akka] object TryUtil {
 
   /**
    * Flatten a collection of try's to give either a success of the try values, or just the failure.
@@ -31,12 +32,9 @@ private[akka] object TrySeq {
   def flatten[A](seq: Seq[Try[A]]): Try[Seq[A]] = {
     @scala.annotation.tailrec
     def go(remaining: Seq[Try[A]], processed: Seq[A]): Try[Seq[A]] = remaining match {
-      case Seq() =>
-        Success(processed)
-      case Success(head) +: tail =>
-        go(remaining = tail, processed :+ head)
-      case Failure(t) +: _ =>
-        Failure(t)
+      case Seq() => Success(processed)
+      case Success(head) +: tail => go(remaining = tail, processed :+ head)
+      case Failure(t) +: _ => Failure(t)
     }
 
     go(seq, Vector.empty)
@@ -58,5 +56,16 @@ private[akka] object TrySeq {
    */
   def writeCompleteSignal[A](xs: Seq[Try[A]]): Seq[Try[Unit]] =
     if (xs.forall(_.isSuccess)) Nil else xs.map(_.map(_ => ()))
+
+  /**
+   * Wraps a `Future`'s outcome in a `Try`.
+   *
+   * @param future the future to wrap
+   * @param ec an `ExecutionContext`
+   * @tparam T the future type
+   * @return the wrapped outcome
+   */
+  def futureTry[T](future: () => Future[T])(implicit ec: ExecutionContext): Future[Try[T]] =
+    future().map(Success(_)) recover { case e => Failure(e) }
 
 }

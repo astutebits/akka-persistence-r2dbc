@@ -20,11 +20,11 @@ import akka.NotUsed
 import akka.actor.ExtendedActorSystem
 import akka.persistence.query.scaladsl._
 import akka.persistence.query.{EventEnvelope, NoOffset, Offset, Sequence}
-import akka.persistence.r2dbc.journal.{JournalEntry, PersistenceReprSerDe}
+import akka.persistence.r2dbc.journal.{PersistenceReprSerDe, JournalEntry}
 import akka.serialization.SerializationExtension
 import akka.stream.scaladsl.Source
-import scala.concurrent.Future
 import scala.concurrent.duration.{FiniteDuration, _}
+import scala.concurrent.{ExecutionContextExecutor, Future}
 
 private[akka] trait ReactiveReadJournal
     extends ReadJournal
@@ -36,8 +36,9 @@ private[akka] trait ReactiveReadJournal
         with EventsByTagQuery {
 
   protected val system: ExtendedActorSystem
+  private lazy implicit val ec: ExecutionContextExecutor = system.dispatcher
 
-  private lazy val serializer = new PersistenceReprSerDe(SerializationExtension(system))
+  private lazy val reprSerDe = new PersistenceReprSerDe(SerializationExtension(system))
   protected val dao: QueryDao
 
   override def currentPersistenceIds(): Source[String, NotUsed] =
@@ -86,13 +87,12 @@ private[akka] trait ReactiveReadJournal
     }
   )
 
-  private[this] def mapEntries(source: Source[JournalEntry, NotUsed]): Source[EventEnvelope, NotUsed] =
-    source
-        .map(entry => serializer.deserialize(entry).map((entry.id, _)))
-        .mapAsync(1)(Future.fromTry)
-        .map {
-          case (index, repr) =>
-            EventEnvelope(Sequence(index), repr.persistenceId, repr.sequenceNr, repr.payload, repr.timestamp)
-        }
+  private[this] def mapEntries(source: Source[JournalEntry, NotUsed]): Source[EventEnvelope, NotUsed] = {
+    source.mapAsync(1) { entry =>
+      reprSerDe.deserialize(entry).flatMap(Future.fromTry).map((entry.id, _))
+    } map { case (index, repr) =>
+      EventEnvelope(Sequence(index), repr.persistenceId, repr.sequenceNr, repr.payload, repr.timestamp)
+    }
+  }
 
 }
