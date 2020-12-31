@@ -40,7 +40,9 @@ import java.util.stream.Collectors;
 import org.reactivestreams.Publisher;
 import reactor.core.publisher.Flux;
 import reactor.util.function.Tuple2;
+import scala.Function1;
 import scala.collection.JavaConverters;
+import scala.runtime.AbstractFunction1;
 
 /**
  * A {@link JournalDao} for PostgreSQL with <strong>r2dbc-postgresql</strong>
@@ -76,9 +78,15 @@ final class PostgreSqlJournalDao extends AbstractJournalDao {
   public Source<JournalEntry, NotUsed> doFetchEvents(
       String persistenceId, Long fromSeqNr, Long toSeqNr, Long max
   ) {
-    Function<Handle, Publisher<JournalEntry>> findEvents = handle -> handle.executeQuery(
-        findEventsQuery(persistenceId, fromSeqNr, toSeqNr, max), ResultUtils::toJournalEntry
-    );
+    @SuppressWarnings("Convert2Diamond")
+    Function1<Handle, Publisher<JournalEntry>> findEvents = new AbstractFunction1<Handle, Publisher<JournalEntry>>() {
+      @Override
+      public Publisher<JournalEntry> apply(Handle handle) {
+        return handle.executeQuery(
+            findEventsQuery(persistenceId, fromSeqNr, toSeqNr, max), ResultUtils::toJournalEntry
+        );
+      }
+    };
     return Source.fromPublisher(r2dbc.withHandle(findEvents).take(max));
   }
 
@@ -100,9 +108,15 @@ final class PostgreSqlJournalDao extends AbstractJournalDao {
 
   @Override
   public Source<Long, NotUsed> doReadHighestSequenceNr(String persistenceId, Long fromSeqNr) {
-    Function<Handle, Publisher<Long>> readHighestSeqNr = handle -> handle.executeQuery(
-        highestSeqNrQuery(persistenceId, fromSeqNr), result -> toSeqId(result, "sequence_nr")
-    );
+    @SuppressWarnings("Convert2Diamond")
+    Function1<Handle, Publisher<Long>> readHighestSeqNr = new AbstractFunction1<Handle, Publisher<Long>>() {
+      @Override
+      public Publisher<Long> apply(Handle handle) {
+        return handle.executeQuery(
+            highestSeqNrQuery(persistenceId, fromSeqNr), result -> toSeqId(result, "sequence_nr")
+        );
+      }
+    };
     return Source.fromPublisher(r2dbc.withHandle(readHighestSeqNr));
   }
 

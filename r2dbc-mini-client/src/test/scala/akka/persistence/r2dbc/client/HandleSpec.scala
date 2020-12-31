@@ -16,6 +16,7 @@
 
 package akka.persistence.r2dbc.client
 
+import io.r2dbc.spi.Result
 import io.r2dbc.spi.test._
 import org.scalatest.flatspec.AnyFlatSpecLike
 import org.scalatest.matchers.should.Matchers
@@ -30,7 +31,7 @@ final class HandleSpec extends AnyFlatSpecLike with Matchers {
   "Handle" should "commit successful transaction" in {
     val connection = MockConnection.empty
 
-    StepVerifier.create(new Handle(connection).inTransaction(_ => Mono.just(100)))
+    StepVerifier.create(Handle(connection).inTransaction((_: Handle) => Mono.just(100)))
         .expectNext(100)
         .verifyComplete()
 
@@ -42,7 +43,7 @@ final class HandleSpec extends AnyFlatSpecLike with Matchers {
     val connection = MockConnection.empty
     val exception = new IllegalArgumentException("Boom")
 
-    StepVerifier.create(new Handle(connection).inTransaction[Int](_ => Mono.error(exception)))
+    StepVerifier.create(Handle(connection).inTransaction[Int]((_: Handle) => Mono.error[Int](exception)))
         .expectErrorMessage(exception.getMessage)
         .verify()
 
@@ -65,13 +66,41 @@ final class HandleSpec extends AnyFlatSpecLike with Matchers {
     val statement = MockStatement.builder.result(result).build()
     val connection = MockConnection.builder.statement(statement).build
 
-    StepVerifier.create(new Handle(connection).executeQuery[Integer]("SELECT id FROM table",
-      result => result.map((row, _) => row.get("id", classOf[Integer]))))
+    StepVerifier.create(Handle(connection).executeQuery[Integer]("SELECT id FROM table",
+      (result: Result) => result.map((row, _) => row.get("id", classOf[Integer]))))
         .expectNext(1)
         .expectNext(2)
         .verifyComplete()
 
     connection.getCreateStatementSql shouldBe "SELECT id FROM table"
+  }
+
+  it should "throw exception if `connection` is null when calling apply(Connection)" in {
+    val caught = intercept[IllegalArgumentException] {
+      Handle(null)
+    }
+    caught.getMessage shouldBe "requirement failed: connection must not be null"
+  }
+
+  it should "throw exception if `fn` is null when calling inTransaction(Handle => Publisher)" in {
+    val caught = intercept[IllegalArgumentException] {
+      Handle(MockConnection.empty).inTransaction(null)
+    }
+    caught.getMessage shouldBe "requirement failed: fn must not be null"
+  }
+
+  it should "throw exception if `sql` is null when calling executeQuery(String, Result => Publisher)" in {
+    val caught = intercept[IllegalArgumentException] {
+      Handle(MockConnection.empty).executeQuery(null, result => result.getRowsUpdated)
+    }
+    caught.getMessage shouldBe "requirement failed: sql must not be null"
+  }
+
+  it should "throw exception if `fn` is null when calling executeQuery(String, Result => Publisher)" in {
+    val caught = intercept[IllegalArgumentException] {
+      Handle(MockConnection.empty).executeQuery("QUERY", null)
+    }
+    caught.getMessage shouldBe "requirement failed: fn must not be null"
   }
 
 }

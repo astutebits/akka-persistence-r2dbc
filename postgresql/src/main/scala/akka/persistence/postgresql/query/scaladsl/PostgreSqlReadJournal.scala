@@ -54,6 +54,6 @@ final class PostgreSqlReadJournal(val system: ExtendedActorSystem, config: Confi
     extends ReactiveReadJournal {
 
   override protected val dao: QueryDao =
-    new PostgreSqlQueryDao(new R2dbc(ConnectionPoolFactory("postgresql", ReadJournalConfig(system, config))))
+    new PostgreSqlQueryDao(R2dbc(ConnectionPoolFactory("postgresql", ReadJournalConfig(system, config))))
 
 }

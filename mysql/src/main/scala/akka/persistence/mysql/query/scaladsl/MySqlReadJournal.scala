@@ -54,6 +54,6 @@ private[query] final class MySqlReadJournal(val system: ExtendedActorSystem, con
     extends ReactiveReadJournal {
 
   override protected val dao: QueryDao =
-    new MySqlQueryDao(new R2dbc(ConnectionPoolFactory("mysql", ReadJournalConfig(system, config))))
+    new MySqlQueryDao(R2dbc(ConnectionPoolFactory("mysql", ReadJournalConfig(system, config))))
 
 }

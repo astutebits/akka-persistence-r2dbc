@@ -36,7 +36,7 @@ final class MySqlJournalSpec
     extends JournalSpec(config = MySqlJournalSpec.JournalPluginConfig)
         with Eventually with ProjectionExtensionSpec {
 
-  override protected val r2dbc: R2dbc = new R2dbc(
+  override protected val r2dbc: R2dbc = R2dbc(
     MySqlConnectionFactory.from(MySqlConnectionConfiguration.builder()
         .host("localhost")
         .username("root")

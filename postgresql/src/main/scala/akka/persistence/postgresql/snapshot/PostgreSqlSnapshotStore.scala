@@ -26,6 +26,6 @@ private[akka] final class PostgreSqlSnapshotStore(config: Config) extends Reacti
 
   override protected val system: ActorSystem = context.system
   override protected val dao: SnapshotStoreDao =
-    new PostgreSqlSnapshotStoreDao(new R2dbc(ConnectionPoolFactory("postgresql", SnapshotStorePluginConfig(config))))
+    new PostgreSqlSnapshotStoreDao(R2dbc(ConnectionPoolFactory("postgresql", SnapshotStorePluginConfig(config))))
 
 }

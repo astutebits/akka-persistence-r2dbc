@@ -30,12 +30,12 @@ final class R2dbcSpec extends AnyFlatSpecLike with Matchers {
   "R2dbc" should "open and close the connection if successful withHandle execution" in {
     val connection = MockConnection.empty
     val connectionFactory = MockConnectionFactory.builder.connection(connection).build
-    val r2dbc = new R2dbc(connectionFactory)
+    val r2dbc = R2dbc(connectionFactory)
 
     StepVerifier.create(r2dbc.withHandle(_ => Flux.just(1, 2)))
         .expectNext(1)
         .expectNext(2)
-        .verifyComplete()
+        .verifyComplete
 
     connection.isCloseCalled shouldBe true
   }
@@ -43,11 +43,11 @@ final class R2dbcSpec extends AnyFlatSpecLike with Matchers {
   it should "open and close the connection if erroneous withHandle execution" in {
     val connection = MockConnection.empty
     val connectionFactory = MockConnectionFactory.builder.connection(connection).build
-    val r2dbc = new R2dbc(connectionFactory)
+    val r2dbc = R2dbc(connectionFactory)
 
     StepVerifier.create(r2dbc.withHandle(_ => Mono.error[Int](new IllegalArgumentException("BOOM!"))))
         .expectErrorMessage("BOOM!")
-        .verify()
+        .verify
 
     connection.isCloseCalled shouldBe true
   }
@@ -55,12 +55,12 @@ final class R2dbcSpec extends AnyFlatSpecLike with Matchers {
   it should "open and close the connection if successful inTransaction execution" in {
     val connection = MockConnection.empty
     val connectionFactory = MockConnectionFactory.builder.connection(connection).build
-    val r2dbc = new R2dbc(connectionFactory)
+    val r2dbc = R2dbc(connectionFactory)
 
     StepVerifier.create(r2dbc.inTransaction(_ => Flux.just(1, 2)))
         .expectNext(1)
         .expectNext(2)
-        .verifyComplete()
+        .verifyComplete
 
     connection.isBeginTransactionCalled shouldBe true
     connection.isCommitTransactionCalled shouldBe true
@@ -70,15 +70,40 @@ final class R2dbcSpec extends AnyFlatSpecLike with Matchers {
   it should "open and close the connection if erroneous inTransaction execution" in {
     val connection = MockConnection.empty
     val connectionFactory = MockConnectionFactory.builder.connection(connection).build
-    val r2dbc = new R2dbc(connectionFactory)
+    val r2dbc = R2dbc(connectionFactory)
 
     StepVerifier.create(r2dbc.inTransaction(_ => Mono.error[Int](new IllegalArgumentException("BOOM!"))))
         .expectErrorMessage("BOOM!")
-        .verify()
+        .verify
 
     connection.isBeginTransactionCalled shouldBe true
     connection.isRollbackTransactionCalled shouldBe true
     connection.isCloseCalled shouldBe true
+  }
+
+  it should "throw exception if `connection` is null when calling apply(Connection)" in {
+    val caught = intercept[IllegalArgumentException] {
+      R2dbc(null)
+    }
+    caught.getMessage shouldBe "requirement failed: factory must not be null"
+  }
+
+  it should "throw exception if `fn` is null when calling inTransaction(Handle => Publisher)" in {
+    val connection = MockConnection.empty
+    val factory = MockConnectionFactory.builder.connection(connection).build
+    val caught = intercept[IllegalArgumentException] {
+      R2dbc(factory).inTransaction(null)
+    }
+    caught.getMessage shouldBe "requirement failed: fn must not be null"
+  }
+
+  it should "throw exception if `fn` is null when calling withHandle(Handle => Publisher)" in {
+    val connection = MockConnection.empty
+    val factory = MockConnectionFactory.builder.connection(connection).build
+    val caught = intercept[IllegalArgumentException] {
+      R2dbc(factory).withHandle(null)
+    }
+    caught.getMessage shouldBe "requirement failed: fn must not be null"
   }
 
 }

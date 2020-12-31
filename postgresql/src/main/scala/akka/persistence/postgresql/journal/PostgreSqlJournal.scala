@@ -27,6 +27,6 @@ private[akka] final class PostgreSqlJournal(config: Config)
 
   override implicit val system: ActorSystem = context.system
   override protected val dao: JournalDao =
-    new PostgreSqlJournalDao(new R2dbc(ConnectionPoolFactory("postgresql", JournalPluginConfig(config))))
+    new PostgreSqlJournalDao(R2dbc(ConnectionPoolFactory("postgresql", JournalPluginConfig(config))))
 
 }

@@ -40,7 +40,7 @@ final class PostgreSqlJournalSpec
     extends JournalSpec(config = PostgreSqlJournalSpec.JournalPluginConfig)
         with Eventually with ProjectionExtensionSpec {
 
-  protected val r2dbc = new R2dbc(
+  protected val r2dbc: R2dbc = R2dbc(
     new PostgresqlConnectionFactory(PostgresqlConnectionConfiguration.builder()
         .host("localhost")
         .username("postgres")

@@ -46,7 +46,7 @@ final class PostgreSqlReadJournalSpec
         with Eventually
         with BeforeAndAfterEach {
 
-  private val r2dbc = new R2dbc(
+  private val r2dbc = R2dbc(
     new PostgresqlConnectionFactory(PostgresqlConnectionConfiguration.builder()
         .host("localhost")
         .username("postgres")
