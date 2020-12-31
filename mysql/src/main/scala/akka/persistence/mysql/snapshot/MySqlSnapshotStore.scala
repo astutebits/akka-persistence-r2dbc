@@ -32,6 +32,6 @@ private[akka] final class MySqlSnapshotStore(config: Config) extends ReactiveSna
 
   override protected val system: ActorSystem = context.system
   override protected val dao: SnapshotStoreDao =
-    new MySqlSnapshotStoreDao(new R2dbc(ConnectionPoolFactory("mysql", SnapshotStorePluginConfig(config))))
+    new MySqlSnapshotStoreDao(R2dbc(ConnectionPoolFactory("mysql", SnapshotStorePluginConfig(config))))
 
 }

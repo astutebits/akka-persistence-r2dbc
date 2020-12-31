@@ -41,7 +41,9 @@ import org.reactivestreams.Publisher;
 import reactor.core.publisher.Flux;
 import reactor.util.function.Tuple2;
 import reactor.util.function.Tuples;
+import scala.Function1;
 import scala.collection.JavaConverters;
+import scala.runtime.AbstractFunction1;
 
 /**
  * A {@link JournalDao} for MySQL with <strong>r2dbc-mysql</strong>
@@ -89,9 +91,15 @@ final class MySqlJournalDao extends AbstractJournalDao {
       Long toSeqNr,
       Long max
   ) {
-    Function<Handle, Publisher<JournalEntry>> findEvents = handle -> handle.executeQuery(
-        findEventsQuery(persistenceId, fromSeqNr, toSeqNr, max), ResultUtils::toJournalEntry
-    );
+    @SuppressWarnings("Convert2Diamond")
+    Function1<Handle, Publisher<JournalEntry>> findEvents = new AbstractFunction1<Handle, Publisher<JournalEntry>>() {
+      @Override
+      public Publisher<JournalEntry> apply(Handle handle) {
+        return handle.executeQuery(
+            findEventsQuery(persistenceId, fromSeqNr, toSeqNr, max), ResultUtils::toJournalEntry
+        );
+      }
+    };
     return Source.fromPublisher(r2dbc.withHandle(findEvents).take(max));
   }
 
@@ -113,9 +121,15 @@ final class MySqlJournalDao extends AbstractJournalDao {
 
   @Override
   public Source<Long, NotUsed> doReadHighestSequenceNr(String persistenceId, Long fromSeqNr) {
-    Function<Handle, Publisher<Long>> readHighestSeqNr = handle -> handle.executeQuery(
-        highestSeqNrQuery(persistenceId, fromSeqNr), result -> toSeqId(result, "sequence_nr")
-    );
+    @SuppressWarnings("Convert2Diamond")
+    Function1<Handle, Publisher<Long>> readHighestSeqNr = new AbstractFunction1<Handle, Publisher<Long>>() {
+      @Override
+      public Publisher<Long> apply(Handle handle) {
+        return handle.executeQuery(
+            highestSeqNrQuery(persistenceId, fromSeqNr), result -> toSeqId(result, "sequence_nr")
+        );
+      }
+    };
     return Source.fromPublisher(r2dbc.withHandle(readHighestSeqNr));
   }
 

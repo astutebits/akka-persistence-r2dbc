@@ -34,7 +34,7 @@ final class MySqlSnapshotStoreSpec
 
   override def beforeAll(): Unit = {
     eventually(timeout(60.seconds), interval(1.second)) {
-      val r2dbc = new R2dbc(
+      val r2dbc = R2dbc(
         MySqlConnectionFactory.from(MySqlConnectionConfiguration.builder()
             .host("localhost")
             .username("root")

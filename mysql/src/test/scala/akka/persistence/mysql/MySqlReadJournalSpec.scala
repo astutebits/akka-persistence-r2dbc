@@ -40,7 +40,7 @@ final class MySqlReadJournalSpec
         with EventsByPersistenceIdSpec
         with Eventually {
 
-  private val r2dbc = new R2dbc(
+  private val r2dbc = R2dbc(
     MySqlConnectionFactory.from(MySqlConnectionConfiguration.builder()
         .host("localhost")
         .username("root")

@@ -18,8 +18,6 @@ package akka.persistence.query
 
 import akka.persistence.query.scaladsl.{CurrentPersistenceIdsQuery, PersistenceIdsQuery}
 import akka.stream.testkit.scaladsl.TestSink
-import java.util.UUID
-import org.scalatest.BeforeAndAfterEach
 import scala.concurrent.duration._
 
 /**

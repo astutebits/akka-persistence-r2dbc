@@ -32,6 +32,6 @@ private[akka] final class MySqlJournal(config: Config)
     extends ReactiveJournal {
 
   override implicit val system: ActorSystem = context.system
-  override protected val dao = new MySqlJournalDao(new R2dbc(ConnectionPoolFactory("mysql", JournalPluginConfig(config))))
+  override protected val dao = new MySqlJournalDao(R2dbc(ConnectionPoolFactory("mysql", JournalPluginConfig(config))))
 
 }

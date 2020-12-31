@@ -128,7 +128,7 @@ final class ReactiveJournalSpec
 
     journal.asyncDeleteMessagesTo("foo", 100) map { result =>
       mockDao.deleteEvents("foo", 100) was called
-      result shouldBe()
+      result shouldBe ()
     }
   }
 
@@ -157,7 +157,7 @@ final class ReactiveJournalSpec
       mockDao.fetchEvents("foo", 1, 2, 2) was called
       counter.get shouldBe 2
 
-      result shouldBe()
+      result shouldBe ()
     }
   }
 
