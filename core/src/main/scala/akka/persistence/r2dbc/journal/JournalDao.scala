@@ -58,7 +58,7 @@ trait JournalDao {
    *
    * @param persistenceId the persistence id.
    * @param toSeqNr sequence number (inclusive).
-   * @return a [[Source]] with a single [[Unit]]
+   * @return a [[Source]] with a single [[Int]]
    */
 
   def deleteEvents(persistenceId: String, toSeqNr: Long): Source[Int, NotUsed]

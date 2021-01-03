@@ -20,7 +20,7 @@ import io.r2dbc.spi.Result
 import java.lang.{Long => JLong}
 import org.reactivestreams.Publisher
 
-private[snapshot] object ResultUtils {
+private[persistence] object ResultUtils {
 
   def entryOf(result: Result): Publisher[SnapshotEntry] =
     result.map((row, _) => SnapshotEntry.of(

@@ -14,15 +14,21 @@
  * limitations under the License.
  */
 
-package akka.persistence.mysql.query.scaladsl
+package akka.persistence.postgresql.query.scaladsl
 
+import akka.NotUsed
+import akka.persistence.r2dbc.client.R2dbc
+import akka.persistence.r2dbc.journal.JournalEntry
+import akka.persistence.r2dbc.journal.ResultUtils.{toJournalEntry, toPersistenceId, toSeqId}
+import akka.persistence.r2dbc.query.QueryDao
+import akka.stream.scaladsl.Source
 import java.lang.{Long => JLong}
 
-private[query] object MySqlReadJournalQueries {
+private[query] object PostgreSqlQueryDao {
 
   def fetchPersistenceIdsQuery(offset: JLong): String =
-    "SELECT persistence_id, max(id) AS id FROM event" +
-        s" WHERE id >= $offset GROUP BY persistence_id ORDER BY id"
+    s"SELECT persistence_id, max(id) AS id FROM event WHERE id >= $offset" +
+        s" GROUP BY persistence_id ORDER BY id"
 
   def fetchByPersistenceIdQuery(
       persistenceId: String,
@@ -46,5 +52,35 @@ private[query] object MySqlReadJournalQueries {
 
   def findHighestSeqQuery(persistenceId: String): String =
     s"SELECT max(sequence_nr) AS sequence_nr FROM event WHERE persistence_id = '$persistenceId'"
+
+}
+
+final class PostgreSqlQueryDao(val r2dbc: R2dbc) extends QueryDao {
+
+  import PostgreSqlQueryDao._
+
+  override def fetchPersistenceIds(offset: Long): Source[(Long, String), NotUsed] = Source.fromPublisher(
+    r2dbc.withHandle(_.executeQuery(fetchPersistenceIdsQuery(offset), toPersistenceId))
+  )
+      .map(x => x.copy(x._1.toLong))
+
+  override def fetchByPersistenceId(
+      persistenceId: String,
+      fromSeqNr: Long,
+      toSeqNr: Long
+  ): Source[JournalEntry, NotUsed] = Source.fromPublisher(
+    r2dbc.withHandle(_.executeQuery(fetchByPersistenceIdQuery(persistenceId, fromSeqNr, toSeqNr), toJournalEntry))
+  )
+
+  override def fetchByTag(tag: String, fromIndex: Long, toIndex: Long): Source[JournalEntry, NotUsed] =
+    Source.fromPublisher(r2dbc.withHandle(_.executeQuery(fetchByTagQuery(tag, fromIndex, toIndex), toJournalEntry)))
+
+  override def findHighestIndex(tag: String): Source[Long, NotUsed] = Source.fromPublisher(
+    r2dbc.withHandle(_.executeQuery(findHighestIndexQuery(tag), toSeqId(_, "event_id")))
+  )
+
+  override def findHighestSeq(persistenceId: String): Source[Long, NotUsed] = Source.fromPublisher(
+    r2dbc.withHandle(_.executeQuery(findHighestSeqQuery(persistenceId), toSeqId(_, "sequence_nr")))
+  )
 
 }
