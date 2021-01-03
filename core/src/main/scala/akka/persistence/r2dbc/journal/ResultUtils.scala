@@ -22,7 +22,7 @@ import org.reactivestreams.Publisher
 
 private[akka] object ResultUtils {
 
-  def toJournalEntry(result: Result): Publisher[JournalEntry] =
+  def toJournalEntry(result: Result): Publisher[JournalEntry] = {
     result.map((row, _) => JournalEntry.of(
       row.get("id", classOf[JLong]),
       row.get("persistence_id", classOf[String]),
@@ -34,17 +34,16 @@ private[akka] object ResultUtils {
       row.get("ser_manifest", classOf[String]),
       row.get("writer_uuid", classOf[String])
     ))
+  }
 
-  def toPersistenceId(result: Result): Publisher[(JLong, String)] =
-    result.map((row, _) => (
-        row.get("id", classOf[JLong]),
-        row.get("persistence_id", classOf[String])
-    ))
+  def toPersistenceId(result: Result): Publisher[(Long, String)] = result.map((row, _) => {
+    val id = row.get("id", classOf[JLong])
+    (if (id == null) id else id.toLong, row.get("persistence_id", classOf[String]))
+  })
 
-  def toSeqId(result: Result, name: String): Publisher[JLong] =
-    result.map((row, _) => {
-      val seq = row.get(name, classOf[JLong])
-      if (seq == null) 0L else seq
-    })
+  def toSeqId(result: Result, name: String): Publisher[Long] = result.map((row, _) => {
+    val seq = row.get(name, classOf[JLong])
+    if (seq == null) 0L else seq
+  })
 
 }
