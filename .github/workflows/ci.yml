@@ -3,12 +3,12 @@ name: akka-persistence-r2dbc CI
 on:
   push:
     branches:
-      - master
+      - trunk
     tags:
       - v*
   pull_request:
     branches:
-      - master
+      - trunk
   schedule:
     - cron: '0 0 * * *'
 
