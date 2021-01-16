@@ -23,6 +23,7 @@ import akka.stream.Materializer
 import akka.stream.scaladsl.{Sink, Source}
 import java.util.{HashMap => JHMap, Map => JMap}
 import scala.collection.immutable.Seq
+import scala.concurrent.duration.{FiniteDuration, NANOSECONDS}
 import scala.concurrent.{ExecutionContextExecutor, Future}
 import scala.util.Try
 
@@ -37,7 +38,14 @@ trait JournalLogic {
 
   private lazy implicit val mat: Materializer = Materializer(system)
   private lazy implicit val ec: ExecutionContextExecutor = system.dispatcher
+  private lazy val replayTimeout = {
+    val pluginPath = system.settings.config.getString("akka.persistence.journal.plugin")
+    val duration = system.settings.config.getConfig(pluginPath).getDuration("replay-messages-timeout")
+    FiniteDuration(duration.toNanos, NANOSECONDS)
+  }
+
   protected val dao: JournalDao
+
   private val writeInProgress: JMap[String, Future[Any]] = new JHMap
 
   def asyncWriteMessages(messages: Seq[AtomicWrite]): Future[Seq[Try[Unit]]] = {
@@ -72,8 +80,8 @@ trait JournalLogic {
       toSequenceNr: Long,
       max: Long
   )(recoveryCallback: PersistentRepr => Unit): Future[Unit] = {
-    // TODO: Protect the fetchEvents call with a circuit-breaker
     dao.fetchEvents(persistenceId, fromSequenceNr, toSequenceNr, max)
+        .completionTimeout(replayTimeout)
         .mapAsync(1)(entry => reprSerDe.deserialize(entry).flatMap(Future.fromTry))
         .runForeach(repr => recoveryCallback(repr))
         .map(_ => ())

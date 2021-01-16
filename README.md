@@ -4,9 +4,25 @@ An implementation of the Akka [Journal][0] and [Snapshot store][1] persistence
 plugin APIs, and the full [Persistence Query][2] API with [R2DBC][3]. The plugin
 has a few additional extensions documented below.
 
+## Configuration
+
+Unlike the other `AsyncWriteJournal` calls, the `asyncReplayMessages` one is not
+protected by a circuit-breaker, for a good reason:
+
+> This call is NOT protected with a circuit-breaker because it may take long
+> time to replay all events. The plugin implementation itself must protect
+> against an unresponsive backend store and make sure that the returned
+> Future is completed with success or failure within reasonable time. It is
+> not allowed to ignore completing the future.
+
+The plugin guarantees that the Future is completed by imposing a time limit on
+the SQL stream's completion. You can configure the timeout with the
+`replay-messages-timeout` parameter, the default value is `10s` (in line with
+the circuit breaker settings).
+
 ## Extensions
 
-* `akka.serialization.AsyncSerializer` support 
+* `akka.serialization.AsyncSerializer` support
 * `Atomic Projections` gives you the ability to persist an event and run
   projections for a "local" read-side in an atomic transaction.
 

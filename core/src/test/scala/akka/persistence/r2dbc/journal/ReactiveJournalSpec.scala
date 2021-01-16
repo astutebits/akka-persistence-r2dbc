@@ -22,6 +22,7 @@ import akka.persistence.{AtomicWrite, PersistentRepr}
 import akka.stream.scaladsl.Source
 import akka.testkit.TestKit
 import com.typesafe.config.ConfigFactory
+import java.util.concurrent.TimeoutException
 import java.util.concurrent.atomic.AtomicInteger
 import org.mockito.ArgumentMatchersSugar
 import org.mockito.scalatest.{AsyncIdiomaticMockito, ResetMocksAfterEachAsyncTest}
@@ -30,7 +31,7 @@ import org.scalatest.matchers.should.Matchers
 import org.scalatest.{BeforeAndAfterAll, TryValues}
 import scala.collection.immutable.Seq
 import scala.concurrent.Await
-import scala.concurrent.duration.Duration
+import scala.concurrent.duration.{Duration, DurationInt}
 
 final class ReactiveJournalSpec
     extends AsyncFlatSpecLike
@@ -45,6 +46,8 @@ final class ReactiveJournalSpec
     ConfigFactory.parseString(
       """
         |akka.actor.allow-java-serialization = on
+        |akka.persistence.journal.plugin = "fake"
+        |fake.replay-messages-timeout = 100ms
       """.stripMargin
     ).withFallback(ConfigFactory.defaultApplication()).resolve()
   )
@@ -128,7 +131,7 @@ final class ReactiveJournalSpec
 
     journal.asyncDeleteMessagesTo("foo", 100) map { result =>
       mockDao.deleteEvents("foo", 100) was called
-      result shouldBe ()
+      result shouldBe((): Unit)
     }
   }
 
@@ -157,7 +160,7 @@ final class ReactiveJournalSpec
       mockDao.fetchEvents("foo", 1, 2, 2) was called
       counter.get shouldBe 2
 
-      result shouldBe ()
+      result shouldBe((): Unit)
     }
   }
 
@@ -171,6 +174,22 @@ final class ReactiveJournalSpec
       mockDao.fetchEvents("foo", 1, 2, 2) was called
 
       result shouldBe exception
+    }
+  }
+
+  it should "return Failure if the query times out" in {
+    mockDao.fetchEvents("foo", 1, 2, 2) returns Source(
+      Seq(Await.result(journal.reprSerDe.serialize(PersistentRepr(Tagged("foo", Set("FooTag", "FooTagTwo")), 1L, "foo")), Duration.Inf).map(_.copy(id = 1L)))
+    )
+        .initialDelay(200.millis)
+        .map(_.get)
+
+    recoverToExceptionIf[TimeoutException] {
+      journal.asyncReplayMessages("foo", 1, 2, 2)(println)
+    } map { result =>
+      mockDao.fetchEvents("foo", 1, 2, 2) was called
+
+      result.getMessage shouldBe "The stream has not been completed in 100000000 nanoseconds."
     }
   }
 
