@@ -21,7 +21,7 @@ object Versions {
   lazy val scala213 = "2.13.3"
   lazy val supportedScala = Seq(scala213, scala212)
 
-  lazy val akka = "2.6.10"
+  lazy val akka = "2.6.11"
   lazy val reactor = "3.3.10.RELEASE"
   lazy val r2dbcSpi = "0.8.3.RELEASE"
   lazy val r2dbcPool = "0.8.5.RELEASE"
