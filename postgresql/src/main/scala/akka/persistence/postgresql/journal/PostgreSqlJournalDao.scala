@@ -19,7 +19,7 @@ package akka.persistence.postgresql.journal
 import akka.NotUsed
 import akka.persistence.r2dbc.client.{Handle, R2dbc}
 import akka.persistence.r2dbc.journal.ResultUtils.{toJournalEntry, toSeqId}
-import akka.persistence.r2dbc.journal.{JournalDao, JournalEntry, ResultUtils}
+import akka.persistence.r2dbc.journal.{JournalDao, JournalEntry}
 import akka.stream.scaladsl.Source
 import io.netty.buffer.ByteBufUtil.hexDump
 import io.r2dbc.spi.Result

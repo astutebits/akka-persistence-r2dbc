@@ -16,20 +16,17 @@
 
 package akka.persistence.r2dbc.snapshot
 
-import java.io.{ByteArrayInputStream, ByteArrayOutputStream, ObjectInputStream, ObjectOutputStream}
-import java.time.Instant
-
 import akka.actor.ActorSystem
 import akka.persistence.{SelectedSnapshot, SnapshotMetadata, SnapshotSelectionCriteria}
 import akka.stream.scaladsl.Source
 import akka.testkit.TestKit
 import com.typesafe.config.ConfigFactory
+import java.time.Instant
 import org.mockito.ArgumentMatchersSugar
 import org.mockito.scalatest.{AsyncIdiomaticMockito, ResetMocksAfterEachAsyncTest}
 import org.scalatest.flatspec.AsyncFlatSpecLike
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.{BeforeAndAfterAll, TryValues}
-
 import scala.util.Try
 
 case class Counter(value: Int)
@@ -65,25 +62,9 @@ final class ReactiveSnapshotStoreSpec
     super.afterAll()
   }
 
-  // TODO: Get rid of these and just use "string".getBytes
-  private def serialise(value: Any): Array[Byte] = {
-    val stream: ByteArrayOutputStream = new ByteArrayOutputStream()
-    val oos = new ObjectOutputStream(stream)
-    oos.writeObject(value)
-    oos.close()
-    stream.toByteArray
-  }
-
-  private def deserialise(bytes: Array[Byte]): Any = {
-    val ois = new ObjectInputStream(new ByteArrayInputStream(bytes))
-    val value = ois.readObject
-    ois.close()
-    value
-  }
-
   "ReactiveSnapshotStore" should "write snapshot entry and complete the future successfully" in {
-    val (metadata, snapshot) = (SnapshotMetadata("foo", 1, Instant.now.getEpochSecond), Counter(1))
-    val entry = SnapshotEntry(metadata.persistenceId, metadata.sequenceNr, metadata.timestamp, serialise(snapshot))
+    val (metadata, snapshot) = (SnapshotMetadata("foo", 1, Instant.now.getEpochSecond), "woohoo")
+    val entry = SnapshotEntry(metadata.persistenceId, metadata.sequenceNr, metadata.timestamp, snapshot.getBytes)
 
     mockSerializer.serialize(metadata, snapshot) returns Try(entry)
     mockDao.save(entry) returns Source.single(1)
@@ -91,12 +72,12 @@ final class ReactiveSnapshotStoreSpec
     store.saveAsync(metadata, snapshot) map { result =>
       mockSerializer.serialize(metadata, snapshot) was called
       mockDao.save(entry) was called
-      result shouldBe()
+      result shouldBe((): Unit)
     }
   }
 
   it should "fail the 'saveAsync' future if it cannot serialize the snapshot entry" in {
-    val (metadata, snapshot) = (SnapshotMetadata("foo", 1, Instant.now.getEpochSecond), Counter(1))
+    val (metadata, snapshot) = (SnapshotMetadata("foo", 1, Instant.now.getEpochSecond), "oh, no")
     val cause = new IllegalStateException("Boom")
 
     mockSerializer.serialize(metadata, snapshot) returns Try(throw cause)
@@ -111,8 +92,8 @@ final class ReactiveSnapshotStoreSpec
   }
 
   it should "fail the 'saveAsync' future if it cannot write the snapshot entry" in {
-    val (metadata, snapshot) = (SnapshotMetadata("foo", 1, Instant.now.getEpochSecond), Counter(1))
-    val entry = SnapshotEntry(metadata.persistenceId, metadata.sequenceNr, metadata.timestamp, serialise(snapshot))
+    val (metadata, snapshot) = (SnapshotMetadata("foo", 1, Instant.now.getEpochSecond), "hooray")
+    val entry = SnapshotEntry(metadata.persistenceId, metadata.sequenceNr, metadata.timestamp, snapshot.getBytes)
     val exception = new IllegalStateException("Boom")
 
     mockSerializer.serialize(metadata, snapshot) returns Try(entry)
@@ -129,8 +110,8 @@ final class ReactiveSnapshotStoreSpec
   }
 
   it should "load the snapshot that matches the criteria" in {
-    val (metadata, snapshot) = (SnapshotMetadata("foo", 1, Instant.now.getEpochSecond), Counter(1))
-    val entry = SnapshotEntry(metadata.persistenceId, metadata.sequenceNr, metadata.timestamp, serialise(snapshot))
+    val (metadata, snapshot) = (SnapshotMetadata("foo", 1, Instant.now.getEpochSecond), "meow, meow")
+    val entry = SnapshotEntry(metadata.persistenceId, metadata.sequenceNr, metadata.timestamp, snapshot.getBytes)
 
     mockDao.fetchSnapshot("foo", SnapshotSelectionCriteria()) returns Source.single(entry)
     mockSerializer.deserialize(entry) returns Try(SelectedSnapshot(metadata, snapshot))
@@ -164,7 +145,7 @@ final class ReactiveSnapshotStoreSpec
   }
 
   it should "fail the 'loadAsync' future if it cannot deserialize the snapshot entry" in {
-    val (metadata, snapshot) = (SnapshotMetadata("foo", 1, Instant.now.getEpochSecond), "snapshot")
+    val (metadata, snapshot) = (SnapshotMetadata("foo", 1, Instant.now.getEpochSecond), "woof woof")
     val entry = SnapshotEntry(metadata.persistenceId, metadata.sequenceNr, metadata.timestamp, snapshot.getBytes)
     val cause = new IllegalStateException("Boom")
 
@@ -185,7 +166,7 @@ final class ReactiveSnapshotStoreSpec
 
     store.deleteAsync(SnapshotMetadata("foo", 3)) map { result =>
       mockDao.deleteSnapshot("foo", 3) wasCalled once
-      result shouldBe()
+      result shouldBe((): Unit)
     }
   }
 
@@ -206,7 +187,7 @@ final class ReactiveSnapshotStoreSpec
 
     store.deleteAsync("foo", SnapshotSelectionCriteria(3)) map { result =>
       mockDao.deleteSnapshot("foo", SnapshotSelectionCriteria(3)) wasCalled once
-      result shouldBe()
+      result shouldBe((): Unit)
     }
   }
 

@@ -16,15 +16,17 @@
 
 package akka.persistence.query
 
-import akka.persistence.query.scaladsl.{CurrentEventsByPersistenceIdQuery, EventsByPersistenceIdQuery}
 import akka.stream.testkit.scaladsl.TestSink
-import scala.concurrent.duration._
 import scala.collection.immutable
+import scala.concurrent.duration._
 
 /**
- * Test case for [[CurrentEventsByPersistenceIdQuery]] and [[EventsByPersistenceIdQuery]].
+ * Test case for:
+ *  - [[akka.persistence.query.scaladsl.CurrentEventsByPersistenceIdQuery]]
+ *  - [[akka.persistence.query.scaladsl.EventsByPersistenceIdQuery]]
  */
-trait EventsByPersistenceIdSpec { _: ReadJournalSpec =>
+trait EventsByPersistenceIdSpec {
+  _: ReadJournalSpec =>
 
   "CurrentEventsByPersistenceIdQuery" should "fetch existing subset of events" in {
     val pId = newPersistenceId

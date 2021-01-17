@@ -16,15 +16,17 @@
 
 package akka.persistence.query
 
-import akka.persistence.query.scaladsl.{CurrentEventsByTagQuery, EventsByTagQuery}
 import akka.stream.testkit.scaladsl.TestSink
-import scala.concurrent.duration._
 import scala.collection.immutable
+import scala.concurrent.duration._
 
 /**
- * Test case for [[CurrentEventsByTagQuery]] and [[EventsByTagQuery]].
+ * Test case for:
+ *  - [[akka.persistence.query.scaladsl.CurrentEventsByTagQuery]]
+ *  - [[akka.persistence.query.scaladsl.EventsByTagQuery]]
  */
-trait EventsByTagSpec { _: ReadJournalSpec =>
+trait EventsByTagSpec {
+  _: ReadJournalSpec =>
 
   "CurrentEventsByTagQuery" should "fetch all current events" in {
     val pId = newPersistenceId

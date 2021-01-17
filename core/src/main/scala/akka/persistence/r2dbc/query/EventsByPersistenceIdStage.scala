@@ -43,7 +43,7 @@ private[query] final class EventsByPersistenceIdStage private(
     persistenceId: String,
     fromSeqNr: Long,
     toSeqNr: Long,
-    val refreshInterval: Option[FiniteDuration] = None
+    val refreshInterval: Option[FiniteDuration]
 ) extends EventsByStage {
 
   require(dao != null, "the 'dao' must be provided")

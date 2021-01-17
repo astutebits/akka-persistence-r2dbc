@@ -13,11 +13,9 @@ on:
     - cron: '0 0 * * *'
 
 jobs:
-
   build:
-
+    if: github.repository == 'chmodas/akka-persistence-r2dbc'
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout the build container
         uses: docker://chmodas/docker-scala-sbt:11
@@ -26,15 +24,15 @@ jobs:
       - name: Start the Docker containers
         run: sbt dockerComposeUp
       - name: Build and test with 2.12.x
-        run: sbt ++2.12.12 test
+        run: sbt ++2.12.13 test
       - name: Build and test with 2.13.x
-        run: sbt ++2.13.3 test
+        run: sbt ++2.13.4 test
       - name: Stop the Docker containers
         run: sbt dockerComposeStop
       - name: Publish 2.12.x
         if: ${{ github.event_name != 'pull_request' && github.event_name != 'schedule' }}
-        run: sbt ++2.12.12 -Dbintray.user=${{secrets.BINTRAY_USER}} -Dbintray.pass=${{secrets.BINTRAY_PASS}} publish
+        run: sbt ++2.12.13 -Dbintray.user=${{secrets.BINTRAY_USER}} -Dbintray.pass=${{secrets.BINTRAY_PASS}} publish
       - name: Publish 2.13.x
         if: ${{ github.event_name != 'pull_request' && github.event_name != 'schedule' }}
-        run: sbt ++2.13.3 -Dbintray.user=${{secrets.BINTRAY_USER}} -Dbintray.pass=${{secrets.BINTRAY_PASS}} publish
+        run: sbt ++2.13.4 -Dbintray.user=${{secrets.BINTRAY_USER}} -Dbintray.pass=${{secrets.BINTRAY_PASS}} publish
 

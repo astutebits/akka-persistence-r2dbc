@@ -40,7 +40,7 @@ private[query] final class EventsByTagStage private(
     dao: QueryDao,
     tag: String,
     offset: Long,
-    val refreshInterval: Option[FiniteDuration] = None
+    val refreshInterval: Option[FiniteDuration]
 ) extends EventsByStage {
 
   require(dao != null, "the 'dao' must be provided")
