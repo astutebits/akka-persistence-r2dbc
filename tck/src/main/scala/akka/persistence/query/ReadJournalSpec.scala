@@ -61,7 +61,7 @@ abstract class ReadJournalSpec(config: Config)
 
   def pluginId: String
 
-  private def writeMessages(fromSnr: Int, toSnr: Int, pId: String, writerUuid: UUID, tags: Set[String] = Set.empty): Unit = {
+  private def writeMessages(fromSnr: Int, toSnr: Int, pId: String, writerUuid: UUID, tags: Set[String]): Unit = {
 
     def persistentRepr(sequenceNr: Long) =
       PersistentRepr(

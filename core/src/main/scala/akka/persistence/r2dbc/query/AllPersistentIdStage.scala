@@ -32,7 +32,7 @@ private[akka] object AllPersistentIdStage {
 
 private[query] final class AllPersistentIdStage private(
     dao: QueryDao,
-    refreshInterval: Option[FiniteDuration] = None
+    refreshInterval: Option[FiniteDuration]
 ) extends GraphStage[SourceShape[String]] {
 
   require(dao != null, "the 'dao' must be provided")

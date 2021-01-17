@@ -18,7 +18,6 @@ package akka.persistence.r2dbc.client
 
 import akka.persistence.r2dbc.client.ReactiveUtils.{appendError, passThrough}
 import io.r2dbc.spi.{Connection, ConnectionFactory}
-import java.util.function
 import org.reactivestreams.Publisher
 import reactor.core.publisher.{Flux, Mono}
 

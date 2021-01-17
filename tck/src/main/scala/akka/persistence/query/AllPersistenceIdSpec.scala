@@ -16,14 +16,16 @@
 
 package akka.persistence.query
 
-import akka.persistence.query.scaladsl.{CurrentPersistenceIdsQuery, PersistenceIdsQuery}
 import akka.stream.testkit.scaladsl.TestSink
 import scala.concurrent.duration._
 
 /**
- * Test case for [[CurrentPersistenceIdsQuery]] and [[PersistenceIdsQuery]].
+ * Test case for:
+ *  - [[akka.persistence.query.scaladsl.CurrentPersistenceIdsQuery]]
+ *  - [[akka.persistence.query.scaladsl.PersistenceIdsQuery]]
  */
-trait AllPersistenceIdSpec { _: ReadJournalSpec =>
+trait AllPersistenceIdSpec {
+  _: ReadJournalSpec =>
 
   "CurrentPersistenceIdsQuery" should "fetch all persistence ids" in {
     val pIds = getAllPersistenceIds ++ List.fill(3)(persist(newPersistenceId, 5))
@@ -36,12 +38,12 @@ trait AllPersistenceIdSpec { _: ReadJournalSpec =>
   }
 
   it should "not fetch persistence ids added after the stream started" in {
-   val pIds = getAllPersistenceIds ++ List.fill(3)(persist(newPersistenceId, 5))
+    val pIds = getAllPersistenceIds ++ List.fill(3)(persist(newPersistenceId, 5))
 
     val probe = readJournal.currentPersistenceIds()
         .runWith(TestSink.probe)
         .request(pIds.size)
-    .expectNextUnorderedN(pIds)
+        .expectNextUnorderedN(pIds)
 
     persist(newPersistenceId, 5)
 
