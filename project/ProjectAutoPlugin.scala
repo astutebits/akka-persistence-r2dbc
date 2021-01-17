@@ -52,6 +52,7 @@ object ProjectAutoPlugin extends AutoPlugin {
       "-encoding", "utf8",
       "-deprecation",
       "-unchecked",
+      if (scalaVersion.value.startsWith("2.13")) "-Wunused" else "-Ywarn-unused",
       "-language:implicitConversions",
       "-language:higherKinds",
       "-language:existentials",
