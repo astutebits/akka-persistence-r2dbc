@@ -1,14 +1,10 @@
 import sbt.Keys.skip
 
 lazy val root = (project in file("."))
-    .enablePlugins(DockerComposePlugin)
     .settings(
       name := "akka-persistence-r2dbc-root",
       skip in publish := true,
       crossScalaVersions := Nil,
-
-      // We are only using DockerCompose for testing.
-      dockerImageCreationTask := ""
     )
     .aggregate(postgresql, mysql, core)
 
