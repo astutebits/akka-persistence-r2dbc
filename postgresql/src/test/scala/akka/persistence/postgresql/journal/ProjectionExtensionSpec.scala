@@ -25,10 +25,12 @@ import akka.persistence.{AtomicWrite, PersistentImpl, PersistentRepr}
 import akka.testkit.TestProbe
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicInteger
+import org.scalatest.concurrent.Eventually
 import org.scalatest.wordspec.AnyWordSpecLike
 import scala.annotation.tailrec
+import scala.concurrent.duration._
 
-trait ProjectionExtensionSpec extends AnyWordSpecLike {
+trait ProjectionExtensionSpec extends AnyWordSpecLike with Eventually {
   _: JournalSpec =>
 
   protected val r2dbc: R2dbc
@@ -139,13 +141,15 @@ trait ProjectionExtensionSpec extends AnyWordSpecLike {
 
       persistShouldSucceed(pId, 1, projections)
 
-      val (id: String, name: String) = r2dbc.withHandle(handle => handle.executeQuery(
-        s"SELECT id, value FROM projected WHERE id = '$pId';",
-        _.map((row, _) => (row.get("id", classOf[String]), row.get("value", classOf[String])))
-      )).blockLast()
+      eventually(timeout(5.seconds), interval(250.millis)) {
+        val (id: String, name: String) = r2dbc.withHandle(handle => handle.executeQuery(
+          s"SELECT id, value FROM projected WHERE id = '$pId';",
+          _.map((row, _) => (row.get("id", classOf[String]), row.get("value", classOf[String])))
+        )).blockLast()
 
-      id shouldBe s"$pId"
-      name shouldBe "projected"
+        id shouldBe s"$pId"
+        name shouldBe "projected"
+      }
     }
 
     "abort an event write if its projection fails" in {
@@ -166,13 +170,15 @@ trait ProjectionExtensionSpec extends AnyWordSpecLike {
 
       persistShouldSucceed(pId, 3, projections)
 
-      val (id: String, name: String) = r2dbc.withHandle(handle => handle.executeQuery(
-        s"SELECT id, value FROM projected WHERE id = '$pId';",
-        _.map((row, _) => (row.get("id", classOf[String]), row.get("value", classOf[String])))
-      )).blockLast()
+      eventually(timeout(5.seconds), interval(250.millis)) {
+        val (id: String, name: String) = r2dbc.withHandle(handle => handle.executeQuery(
+          s"SELECT id, value FROM projected WHERE id = '$pId';",
+          _.map((row, _) => (row.get("id", classOf[String]), row.get("value", classOf[String])))
+        )).blockLast()
 
-      id shouldBe s"$pId"
-      name shouldBe s"$pId-3"
+        id shouldBe s"$pId"
+        name shouldBe s"$pId-3"
+      }
     }
 
     "abort all event writes when writing multiple events if any projection fails" in {
@@ -186,11 +192,12 @@ trait ProjectionExtensionSpec extends AnyWordSpecLike {
 
       persistShouldFail(pId, projections.size, reason, projections)
 
-      val rows = r2dbc.withHandle(handled => handled.executeQuery(
-        s"SELECT id, value FROM projected WHERE id = '$pId';", _.getRowsUpdated
-      )).blockLast()
-
-      rows shouldBe 0
+      eventually(timeout(5.seconds), interval(250.millis)) {
+        val rows = r2dbc.withHandle(handled => handled.executeQuery(
+          s"SELECT id, value FROM projected WHERE id = '$pId';", _.getRowsUpdated
+        )).blockLast()
+        rows shouldBe 0
+      }
     }
 
     "write a mixed bunch of events with and without projections" in {
@@ -202,13 +209,15 @@ trait ProjectionExtensionSpec extends AnyWordSpecLike {
 
       persistShouldSucceed(pId, 3, projections)
 
-      val (id: String, name: String) = r2dbc.withHandle(handle => handle.executeQuery(
-        s"SELECT id, value FROM projected WHERE id = '$pId';",
-        _.map((row, _) => (row.get("id", classOf[String]), row.get("value", classOf[String])))
-      )).blockLast()
+      eventually(timeout(5.seconds), interval(250.millis)) {
+        val (id: String, name: String) = r2dbc.withHandle(handle => handle.executeQuery(
+          s"SELECT id, value FROM projected WHERE id = '$pId';",
+          _.map((row, _) => (row.get("id", classOf[String]), row.get("value", classOf[String])))
+        )).blockLast()
 
-      id shouldBe s"$pId"
-      name shouldBe s"$pId-2"
+        id shouldBe s"$pId"
+        name shouldBe s"$pId-2"
+      }
     }
 
   }
