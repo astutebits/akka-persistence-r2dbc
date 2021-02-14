@@ -23,6 +23,7 @@ import io.r2dbc.postgresql.{PostgresqlConnectionConfiguration, PostgresqlConnect
 import org.scalatest.BeforeAndAfterEach
 import org.scalatest.concurrent.Eventually
 import scala.concurrent.duration._
+import java.time.{Duration => JDuration}
 
 object PostgreSqlReadJournalSpec {
 
@@ -53,6 +54,7 @@ final class PostgreSqlReadJournalSpec
         .password("s3cr3t")
         .database("db")
         .port(5433)
+        .connectTimeout(JDuration.ofSeconds(3))
         .build())
   )
 

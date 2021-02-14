@@ -22,6 +22,7 @@ import com.typesafe.config.ConfigFactory
 import io.r2dbc.postgresql.{PostgresqlConnectionConfiguration, PostgresqlConnectionFactory}
 import org.scalatest.concurrent.Eventually
 import reactor.core.publisher.{Flux, Mono}
+import java.time.{Duration => JDuration}
 
 import scala.concurrent.duration._
 
@@ -49,6 +50,7 @@ final class PostgreSqlSnapshotStoreSpec
           .password("s3cr3t")
           .database("db")
           .port(5433)
+          .connectTimeout(JDuration.ofSeconds(3))
           .build())
 
       cf.create.flatMapMany(connection => {

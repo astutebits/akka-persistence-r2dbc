@@ -18,6 +18,7 @@ package akka.persistence.r2dbc
 
 import io.r2dbc.pool.{ConnectionPool, ConnectionPoolConfiguration}
 import io.r2dbc.spi.{ConnectionFactories, ConnectionFactory, ConnectionFactoryOptions}
+import java.time.{Duration => JDuration}
 
 private[akka] trait PluginConfig {
   val db: DatabaseConfig
@@ -37,6 +38,7 @@ private[akka] object ConnectionPoolFactory extends ((String, PluginConfig) => Co
         .option(ConnectionFactoryOptions.USER, pluginConfig.db.username)
         .option(ConnectionFactoryOptions.PASSWORD, pluginConfig.db.password)
         .option(ConnectionFactoryOptions.DATABASE, pluginConfig.db.database)
+        .option(ConnectionFactoryOptions.CONNECT_TIMEOUT, JDuration.ofSeconds(3))
         .build()
     new ConnectionPool(
       ConnectionPoolConfiguration.builder(ConnectionFactories.get(factoryOptions))
