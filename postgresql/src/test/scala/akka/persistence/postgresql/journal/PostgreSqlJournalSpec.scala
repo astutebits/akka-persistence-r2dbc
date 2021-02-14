@@ -46,6 +46,7 @@ final class PostgreSqlJournalSpec
         .username("postgres")
         .password("s3cr3t")
         .database("db")
+        .port(5433)
         .build())
   )
 
