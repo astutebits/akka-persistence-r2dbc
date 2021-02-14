@@ -42,7 +42,7 @@ final class MySqlReadJournalSpec
 
   private val r2dbc = R2dbc(
     MySqlConnectionFactory.from(MySqlConnectionConfiguration.builder()
-        .host("localhost")
+        .host("docker")
         .username("root")
         .password("s3cr3t")
         .database("db")

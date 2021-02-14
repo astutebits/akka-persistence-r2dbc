@@ -43,7 +43,7 @@ final class PostgreSqlJournalSpec
 
   protected val r2dbc: R2dbc = R2dbc(
     new PostgresqlConnectionFactory(PostgresqlConnectionConfiguration.builder()
-        .host("localhost")
+        .host("docker")
         .username("postgres")
         .password("s3cr3t")
         .database("db")
