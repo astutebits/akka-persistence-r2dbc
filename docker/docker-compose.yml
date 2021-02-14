@@ -22,5 +22,5 @@ services:
     volumes:
       - ./postgresql-schema.sql:/docker-entrypoint-initdb.d/1000_postgres-schema.sql
     ports:
-      - 5433:5432
+      - "127.0.0.1:5433:5432"
     command: ["postgres", "-c", "log_statement=all", "-c", "log_connections=on", "-c", "log_disconnections=on", "-c", "max_connections=300"]
