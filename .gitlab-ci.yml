@@ -1,0 +1,41 @@
+image: chmodas/docker-scala-sbt:latest
+
+services:
+  - docker:19.03.6-dind
+
+variables:
+  # The MaxMetaspaceSize is defined to tackle a known issue with SBT that leads
+  # to OOM. (https://github.com/sbt/sbt/issues/4166)
+  #
+  #  In short, using Scala version different than the one SBT uses tends to
+  #  result in larger memory use.
+  SBT_OPTS: "-XX:MaxMetaspaceSize=512m -Xms1024m -Xmx1024m -Dio.netty.tryReflectionSetAccessible=true"
+
+  # Instruct the Docker tools to use the daemon of DinD.
+  CI_BUILD: "true"
+  DOCKER_HOST: "tcp://docker:2375"
+
+  # Improve performance with OverlayFS.
+  DOCKER_DRIVER: overlay2
+  DOCKER_TLS_CERTDIR: ""
+
+  # Clone the submodules
+  GIT_SUBMODULE_STRATEGY: recursive
+
+stages:
+  - build
+
+before_script:
+  - echo "Start CI"
+
+build:
+  stage: build
+  script:
+    - docker-compose -p akka-persistence -f docker/docker-compose.yml up -d
+    - sbt ++2.12.13 test
+    - sbt ++2.13.4 test
+    - docker-compose -p akka-persistence -f docker/docker-compose.yml down
+
+after_script:
+  - echo "End CI"
+
