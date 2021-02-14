@@ -49,7 +49,6 @@ final class PostgreSqlSnapshotStoreSpec
           .username("postgres")
           .password("s3cr3t")
           .database("db")
-          .port(5433)
           .connectTimeout(JDuration.ofSeconds(3))
           .build())
 
