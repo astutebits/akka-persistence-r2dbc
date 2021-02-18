@@ -38,7 +38,7 @@ jobs:
         with:
           java-version: 11
       - name: Import Postgres schema
-        run: PGPASSWORD=s3cr3t psql -h 127.0.0.1 -U postgres -d db -f docker/postgresql-schema.sql && for i in {0..150}; do PGPASSWORD psql -h 127.0.0.1 -U postgres -d db -c 'select now()'; done
+        run: PGPASSWORD=s3cr3t psql -h 127.0.0.1 -U postgres -d db -f docker/postgresql-schema.sql && for i in {0..150}; do PGPASSWORD=s3cr3t psql -h 127.0.0.1 -U postgres -d db -c 'select now()'; done
       - name: Start the Docker containers
         run: docker-compose -p akka-persistence -f docker/docker-compose.yml up -d mysql
       - name: Build and test with 2.12.x
