@@ -5,7 +5,15 @@ An implementation of the Akka [Journal][0] and [Snapshot store][1] persistence
 plugin APIs, and the full [Persistence Query][2] API with [R2DBC][3]. The plugin
 has a few additional extensions documented below.
 
+## Installation
+
 ## Configuration
+The plugin provides the default settings as part of the `reference.conf` of 
+the database flavour:
+* [PostgreSQL](postgresql/src/main/resources/reference.conf)
+* [MySQL](mysql/src/main/resources/reference.conf)
+
+
 
 Unlike the other `AsyncWriteJournal` calls, the `asyncReplayMessages` one is not
 protected by a circuit-breaker, for a good reason:
