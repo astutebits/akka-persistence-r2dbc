@@ -26,7 +26,7 @@ jobs:
         with:
           java-version: 11
       - name: List files
-        run: ls -la && export && echo $DOCKER_HOST
+        run: ls -la && export && echo $DOCKER_HOST && cat /etc/hosts && ping -c 1 localhost
       - name: Start the Docker containers
         run: docker-compose -p akka-persistence -f docker/docker-compose.yml up -d
       - name: Build and test with 2.12.x
