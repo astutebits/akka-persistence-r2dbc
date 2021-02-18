@@ -16,7 +16,7 @@ jobs:
   build:
     if: github.repository == 'chmodas/akka-persistence-r2dbc'
     runs-on: ubuntu-latest
-    container: chmodas/docker-scala-sbt:11
+      #container: chmodas/docker-scala-sbt:11
 
     steps:
       - name: Checkout the code
@@ -26,7 +26,7 @@ jobs:
         with:
           java-version: 11
       - name: List files
-        run: ls -la && export && echo $DOCKER_HOST && cat /etc/hosts && ping -c 1 localhost
+        run: ls -la && export && echo $DOCKER_HOST && cat /etc/hosts && docker version && docker-compose-version
       - name: Start the Docker containers
         run: docker-compose -p akka-persistence -f docker/docker-compose.yml up -d
       - name: Build and test with 2.12.x
