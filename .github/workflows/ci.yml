@@ -18,6 +18,18 @@ jobs:
     runs-on: ubuntu-latest
       #container: chmodas/docker-scala-sbt:11
 
+    services:
+      postgres:
+        image: postgres:10.8
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: s3cr3t
+          POSTGRES_DB: db
+        ports:
+          - 5432:5432
+        # needed because the postgres container does not provide a healthcheck
+        options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
+
     steps:
       - name: Checkout the code
         uses: actions/checkout@v1
@@ -25,10 +37,10 @@ jobs:
         uses: actions/setup-java@v1
         with:
           java-version: 11
-      - name: List files
-        run: ls -la && export && echo $DOCKER_HOST && cat /etc/hosts && docker version && docker-compose version && ulimit
+      - name: Import Postgres schema
+        run: PGPASSWORD=s3cr3t psql -h 127.0.0.1 -U postgres -d db -f docker/postgresql-schema.sql
       - name: Start the Docker containers
-        run: docker-compose -p akka-persistence -f docker/docker-compose.yml up -d
+        run: docker-compose -p akka-persistence -f docker/docker-compose.yml up -d mysql
       - name: Build and test with 2.12.x
         run: sbt ++2.12.13 test
       - name: Build and test with 2.13.x
