@@ -25,6 +25,8 @@ jobs:
         uses: actions/setup-java@v1
         with:
           java-version: 11
+      - name: List files
+        run: ls -la
       - name: Start the Docker containers
         run: docker-compose -p akka-persistence -f docker/docker-compose.yml up -d
       - name: Build and test with 2.12.x
