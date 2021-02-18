@@ -37,8 +37,6 @@ jobs:
         uses: actions/setup-java@v1
         with:
           java-version: 11
-      - name: systemctl stuff
-        run: systemctl status postgresql && systemctl status mysql
       - name: Import Postgres schema
         run: PGPASSWORD=s3cr3t psql -h 127.0.0.1 -U postgres -d db -f docker/postgresql-schema.sql && for i in {0..150}; do PGPASSWORD psql -h 127.0.0.1 -U postgres -d db -c 'select now()'; done
       - name: Start the Docker containers
