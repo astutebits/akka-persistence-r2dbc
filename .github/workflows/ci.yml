@@ -38,13 +38,13 @@ jobs:
         with:
           java-version: 11
       - name: Import Postgres schema
-        run: netstat -tupan && PGPASSWORD=s3cr3t psql -h 127.0.0.1 -U postgres -d db -f docker/postgresql-schema.sql && for i in {0..50}; do PGPASSWORD=s3cr3t psql -h 127.0.0.1 -U postgres -d db -c 'select now()'; done
+        run: ss -tupan && PGPASSWORD=s3cr3t psql -h 127.0.0.1 -U postgres -d db -f docker/postgresql-schema.sql && for i in {0..50}; do PGPASSWORD=s3cr3t psql -h 127.0.0.1 -U postgres -d db -c 'select now()'; done
       - name: Start the Docker containers
         run: docker-compose -p akka-persistence -f docker/docker-compose.yml up -d mysql
       - name: Build and test with 2.12.x
         run: sbt ++2.12.13 test
       - name: PG stats
-        run: PGPASSWORD=s3cr3t psql -h 127.0.0.1 -U postgres -d db -c 'select * from pg_stat_activity ; select * from pg_statistic' && netstat -tupan
+        run: PGPASSWORD=s3cr3t psql -h 127.0.0.1 -U postgres -d db -c 'select * from pg_stat_activity ; select * from pg_statistic' && ss -tupan
       - name: Build and test with 2.13.x
         run: sbt ++2.13.4 test
       - name: Stop the Docker containers
