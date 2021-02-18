@@ -38,7 +38,7 @@ jobs:
         with:
           java-version: 11
       - name: PG port
-        run: echo ${{job.services.postgres.ports}}
+        run: echo ${{job.services.postgres.ports['5432']}}
       - name: Import Postgres schema
         run: PGPASSWORD=s3cr3t psql -h 127.0.0.1 -U postgres -d db -f docker/postgresql-schema.sql
       - name: Start the Docker containers
