@@ -16,9 +16,9 @@ jobs:
   build:
     if: github.repository == 'chmodas/akka-persistence-r2dbc'
     runs-on: ubuntu-latest
+    container: chmodas/docker-scala-sbt:11
+
     steps:
-      - name: Checkout the build container
-        uses: docker://chmodas/docker-scala-sbt:11
       - name: Checkout the code
         uses: actions/checkout@v1
       - name: Setup java

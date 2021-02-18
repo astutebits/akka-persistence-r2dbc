@@ -36,7 +36,7 @@ final class MySqlSnapshotStoreSpec
     eventually(timeout(60.seconds), interval(1.second)) {
       val r2dbc = R2dbc(
         MySqlConnectionFactory.from(MySqlConnectionConfiguration.builder()
-            .host("docker")
+            .host("localhost")
             .username("root")
             .password("s3cr3t")
             .database("db")

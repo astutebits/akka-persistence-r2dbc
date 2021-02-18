@@ -38,7 +38,7 @@ final class MySqlJournalSpec
 
   override protected val r2dbc: R2dbc = R2dbc(
     MySqlConnectionFactory.from(MySqlConnectionConfiguration.builder()
-        .host("docker")
+        .host("localhost")
         .username("root")
         .password("s3cr3t")
         .database("db")

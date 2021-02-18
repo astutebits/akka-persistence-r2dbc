@@ -45,7 +45,7 @@ final class PostgreSqlSnapshotStoreSpec
   override def beforeAll(): Unit = {
     eventually(timeout(60.seconds), interval(1.second)) {
       val cf = new PostgresqlConnectionFactory(PostgresqlConnectionConfiguration.builder()
-          .host("docker")
+          .host("localhost")
           .username("postgres")
           .password("s3cr3t")
           .database("db")
