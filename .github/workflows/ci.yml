@@ -18,17 +18,17 @@ jobs:
     runs-on: ubuntu-20.04
       #container: chmodas/docker-scala-sbt:11
 
-    services:
-      postgres:
-        image: postgres:latest
-        env:
-          POSTGRES_USER: postgres
-          POSTGRES_PASSWORD: s3cr3t
-          POSTGRES_DB: db
-        ports:
-          - 5432:5432
-        # needed because the postgres container does not provide a healthcheck
-        options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
+#    services:
+#      postgres:
+#        image: postgres:latest
+#        env:
+#          POSTGRES_USER: postgres
+#          POSTGRES_PASSWORD: s3cr3t
+#          POSTGRES_DB: db
+#        ports:
+#          - 5432:5432
+#        # needed because the postgres container does not provide a healthcheck
+#        options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
 
     steps:
       - name: Checkout the code
@@ -40,7 +40,7 @@ jobs:
       - name: Import Postgres schema
         run: ss -tupan && PGPASSWORD=s3cr3t psql -h 127.0.0.1 -U postgres -d db -f docker/postgresql-schema.sql && for i in {0..50}; do PGPASSWORD=s3cr3t psql -h 127.0.0.1 -U postgres -d db -c 'select now()'; done && ss -tupan
       - name: Start the Docker containers
-        run: docker-compose -p akka-persistence -f docker/docker-compose.yml up -d mysql
+        run: docker-compose -p akka-persistence -f docker/docker-compose.yml up -d
       - name: Build and test with 2.12.x
         run: sbt ++2.12.13 test
       - name: PG stats
