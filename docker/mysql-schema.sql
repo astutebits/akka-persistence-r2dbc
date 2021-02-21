@@ -1,4 +1,3 @@
-DROP TABLE IF EXISTS event;
 CREATE TABLE IF NOT EXISTS event
 (
     id             SERIAL,
@@ -14,7 +13,6 @@ CREATE TABLE IF NOT EXISTS event
     PRIMARY KEY (persistence_id, sequence_nr)
 );
 
-DROP TABLE IF EXISTS tag;
 CREATE TABLE IF NOT EXISTS tag
 (
     id       SERIAL,

@@ -17,6 +17,7 @@
 package akka.persistence.mysql.snapshot
 
 import akka.persistence.CapabilityFlag
+import akka.persistence.mysql.Schema
 import akka.persistence.r2dbc.client.R2dbc
 import akka.persistence.snapshot.SnapshotStoreSpec
 import com.typesafe.config.ConfigFactory
@@ -36,13 +37,13 @@ final class MySqlSnapshotStoreSpec
     eventually(timeout(60.seconds), interval(1.second)) {
       val r2dbc = R2dbc(
         MySqlConnectionFactory.from(MySqlConnectionConfiguration.builder()
-            .host("localhost")
+            .host(system.settings.config.getString("mysql-snapshot.db.hostname"))
             .username("root")
             .password("s3cr3t")
             .database("db")
             .build())
       )
-      r2dbc.withHandle(handle => handle.executeQuery("DELETE FROM snapshot;", _.getRowsUpdated))
+      r2dbc.withHandle(handle => handle.executeQuery(Schema.SQL + "DELETE FROM snapshot;", _.getRowsUpdated))
           .blockLast()
     }
 

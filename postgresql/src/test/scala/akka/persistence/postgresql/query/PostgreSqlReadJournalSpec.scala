@@ -16,6 +16,7 @@
 
 package akka.persistence.postgresql.query
 
+import akka.persistence.postgresql.Schema
 import akka.persistence.query.{AllPersistenceIdSpec, EventsByPersistenceIdSpec, EventsByTagSpec, ReadJournalSpec}
 import akka.persistence.r2dbc.client.R2dbc
 import com.typesafe.config.ConfigFactory
@@ -48,7 +49,7 @@ final class PostgreSqlReadJournalSpec
 
   private val r2dbc = R2dbc(
     new PostgresqlConnectionFactory(PostgresqlConnectionConfiguration.builder()
-        .host("localhost")
+        .host(system.settings.config.getString("postgresql-journal.db.hostname"))
         .username("postgres")
         .password("s3cr3t")
         .database("db")
@@ -57,7 +58,7 @@ final class PostgreSqlReadJournalSpec
 
   override def beforeAll(): Unit = {
     eventually(timeout(60.seconds), interval(1.second)) {
-      r2dbc.withHandle(_.executeQuery("DELETE FROM event; DELETE FROM tag;", _.getRowsUpdated))
+      r2dbc.withHandle(_.executeQuery(Schema.SQL + "DELETE FROM event; DELETE FROM tag;", _.getRowsUpdated))
           .blockLast()
     }
 

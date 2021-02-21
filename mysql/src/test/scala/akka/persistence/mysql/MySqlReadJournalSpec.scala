@@ -42,7 +42,7 @@ final class MySqlReadJournalSpec
 
   private val r2dbc = R2dbc(
     MySqlConnectionFactory.from(MySqlConnectionConfiguration.builder()
-        .host("localhost")
+        .host(system.settings.config.getString("mysql-journal.db.hostname"))
         .username("root")
         .password("s3cr3t")
         .database("db")
@@ -51,7 +51,7 @@ final class MySqlReadJournalSpec
 
   override def beforeAll(): Unit = {
     eventually(timeout(60.seconds), interval(1.second)) {
-      r2dbc.withHandle(_.executeQuery("DELETE FROM event; DELETE FROM tag;", _.getRowsUpdated))
+      r2dbc.withHandle(_.executeQuery(Schema.SQL + "DELETE FROM event; DELETE FROM tag;", _.getRowsUpdated))
           .blockLast()
     }
 

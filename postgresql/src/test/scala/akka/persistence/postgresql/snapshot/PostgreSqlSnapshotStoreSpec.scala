@@ -17,12 +17,12 @@
 package akka.persistence.postgresql.snapshot
 
 import akka.persistence.CapabilityFlag
+import akka.persistence.postgresql.Schema
 import akka.persistence.snapshot.SnapshotStoreSpec
 import com.typesafe.config.ConfigFactory
 import io.r2dbc.postgresql.{PostgresqlConnectionConfiguration, PostgresqlConnectionFactory}
 import org.scalatest.concurrent.Eventually
 import reactor.core.publisher.{Flux, Mono}
-
 import scala.concurrent.duration._
 
 
@@ -42,9 +42,9 @@ final class PostgreSqlSnapshotStoreSpec
         with Eventually {
 
   override def beforeAll(): Unit = {
-    eventually(timeout(60.seconds), interval(1.second)) {
+   eventually(timeout(60.seconds), interval(1.second)) {
       val cf = new PostgresqlConnectionFactory(PostgresqlConnectionConfiguration.builder()
-          .host("localhost")
+          .host(system.settings.config.getString("postgresql-snapshot-store.db.hostname"))
           .username("postgres")
           .password("s3cr3t")
           .database("db")
@@ -52,7 +52,7 @@ final class PostgreSqlSnapshotStoreSpec
 
       cf.create.flatMapMany(connection => {
         connection.createBatch()
-            .add("DELETE FROM snapshot")
+            .add(Schema.SQL + "DELETE FROM snapshot")
             .execute().flatMap(_.getRowsUpdated())
             .concatWith(Flux.from(connection.close).`then`(Mono.empty()))
             .onErrorResume(ex => Flux.from(connection.close).`then`(Mono.error(ex)))

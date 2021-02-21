@@ -8,10 +8,7 @@ services:
       MYSQL_ROOT_PASSWORD: s3cr3t
       MYSQL_DATABASE: db
     ports:
-      - 3306:3306
-    volumes:
-      - ./mysql-schema.sql:/docker-entrypoint-initdb.d/1000_mysql-schema.sql
-      # - ./my.cnf:/etc/mysql/conf.d/mysql.cnf
+      - "3306:3306"
 
   postgres:
     image: postgres:latest
@@ -19,8 +16,6 @@ services:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: s3cr3t
       POSTGRES_DB: db
-    volumes:
-      - ./postgresql-schema.sql:/docker-entrypoint-initdb.d/1000_postgres-schema.sql
     ports:
-      - 5432:5432
-    command: ["postgres", "-c", "log_statement=all", "-c", "log_connections=on", "-c", "log_disconnections=on"]
+      - "5432:5432"
+    command: [ "postgres", "-c", "log_statement=all", "-c", "log_connections=on", "-c", "log_disconnections=on" ]

@@ -18,6 +18,7 @@ package akka.persistence.mysql.journal
 
 import akka.persistence.CapabilityFlag
 import akka.persistence.journal.JournalSpec
+import akka.persistence.mysql.Schema
 import akka.persistence.r2dbc.client.R2dbc
 import com.typesafe.config.ConfigFactory
 import dev.miku.r2dbc.mysql.{MySqlConnectionConfiguration, MySqlConnectionFactory}
@@ -38,7 +39,7 @@ final class MySqlJournalSpec
 
   override protected val r2dbc: R2dbc = R2dbc(
     MySqlConnectionFactory.from(MySqlConnectionConfiguration.builder()
-        .host("localhost")
+        .host(system.settings.config.getString("mysql-journal.db.hostname"))
         .username("root")
         .password("s3cr3t")
         .database("db")
@@ -47,7 +48,7 @@ final class MySqlJournalSpec
 
   override def beforeAll(): Unit = {
     eventually(timeout(60.seconds), interval(1.second)) {
-      r2dbc.withHandle(handle => handle.executeQuery("TRUNCATE TABLE event; TRUNCATE TABLE tag; " +
+      r2dbc.withHandle(handle => handle.executeQuery(Schema.SQL + "TRUNCATE TABLE event; TRUNCATE TABLE tag; " +
           "CREATE TABLE IF NOT EXISTS projected (id varchar(255), value text);", _.getRowsUpdated
       )).blockLast()
     }

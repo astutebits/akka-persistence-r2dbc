@@ -18,6 +18,7 @@ package akka.persistence.postgresql.journal
 
 import akka.persistence.CapabilityFlag
 import akka.persistence.journal.JournalSpec
+import akka.persistence.postgresql.Schema
 import akka.persistence.r2dbc.client.R2dbc
 import com.typesafe.config.ConfigFactory
 import io.r2dbc.postgresql.{PostgresqlConnectionConfiguration, PostgresqlConnectionFactory}
@@ -42,7 +43,7 @@ final class PostgreSqlJournalSpec
 
   protected val r2dbc: R2dbc = R2dbc(
     new PostgresqlConnectionFactory(PostgresqlConnectionConfiguration.builder()
-        .host("localhost")
+        .host(system.settings.config.getString("postgresql-journal.db.hostname"))
         .username("postgres")
         .password("s3cr3t")
         .database("db")
@@ -51,7 +52,7 @@ final class PostgreSqlJournalSpec
 
   override def beforeAll(): Unit = {
     eventually(timeout(60.seconds), interval(1.second)) {
-      r2dbc.withHandle(handle => handle.executeQuery("TRUNCATE event, tag; " +
+      r2dbc.withHandle(handle => handle.executeQuery(Schema.SQL + "TRUNCATE event, tag; " +
           "CREATE TABLE IF NOT EXISTS projected (id varchar(255), value text);", _.getRowsUpdated
       )).blockLast()
     }
