@@ -31,7 +31,11 @@ lazy val postgresql = Project(id = "postgresql", base = file("postgresql"))
       description := "Reactive Akka Journal, Snapshot Store, and Persistence Query plugin for PostgreSQL",
 
       fork in Test := true,
-      parallelExecution in Test := false
+      parallelExecution in Test := false,
+
+      // Pass the system properties to the forked JVM
+      javaOptions in Test ++= collection.JavaConverters.propertiesAsScalaMap(System.getProperties)
+          .map { case (key, value) => "-D" + key + "=" + value }.toSeq
     )
     .dependsOn(core, `r2dbc-mini-client` % "test", tck % "test")
 
@@ -42,7 +46,11 @@ lazy val mysql = Project(id = "mysql", base = file("mysql"))
       description := "Reactive Akka Journal, Snapshot Store, and Persistence Query plugin for MySQL",
 
       fork in Test := true,
-      parallelExecution in Test := false
+      parallelExecution in Test := false,
+
+      // Pass the system properties to the forked JVM
+      javaOptions in Test ++= collection.JavaConverters.propertiesAsScalaMap(System.getProperties)
+          .map { case (key, value) => "-D" + key + "=" + value }.toSeq
     )
     .dependsOn(core, `r2dbc-mini-client` % "test", tck % "test")
 

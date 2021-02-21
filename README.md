@@ -1,4 +1,5 @@
 # Akka Persistence R2DBC
+[![CircleCI](https://circleci.com/gh/astutebits/akka-persistence-r2dbc.svg?style=svg)](https://circleci.com/gh/astutebits/akka-persistence-r2dbc)
 
 An implementation of the Akka [Journal][0] and [Snapshot store][1] persistence
 plugin APIs, and the full [Persistence Query][2] API with [R2DBC][3]. The plugin
