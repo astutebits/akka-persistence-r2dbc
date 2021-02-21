@@ -14,7 +14,6 @@ the database flavour:
 * [MySQL](mysql/src/main/resources/reference.conf)
 
 
-
 Unlike the other `AsyncWriteJournal` calls, the `asyncReplayMessages` one is not
 protected by a circuit-breaker, for a good reason:
 
