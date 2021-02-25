@@ -22,7 +22,7 @@ jobs:
             # fallback to using the latest cache if no exact match is found
             - v1-dependencies-
 
-      - run: sbt -v '++2.12.13 test:compile ; ++2.13.4 test:compile'
+      - run: sbt -v '++2.12.13 test:compile ; ++2.13.5 test:compile'
 
       - save_cache:
           paths:

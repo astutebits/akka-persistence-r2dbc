@@ -30,7 +30,7 @@ jobs:
       - name: Build and test with 2.12.x
         run: sbt ++2.12.13 test
       - name: Build and test with 2.13.x
-        run: sbt ++2.13.4 test
+        run: sbt ++2.13.5 test
       - name: Stop the Docker containers
         run: docker-compose -p akka-persistence -f docker/docker-compose.yml down
       - name: Publish 2.12.x
