@@ -28,7 +28,7 @@ object Versions {
   lazy val r2dbcPostgreSql = "0.8.6.RELEASE"
   lazy val r2dbcMySql = "0.8.2.RELEASE"
   lazy val scalaTest = "3.2.3"
-  lazy val mockito = "1.16.25"
+  lazy val mockito = "1.16.32"
 }
 
 object Dependencies {
