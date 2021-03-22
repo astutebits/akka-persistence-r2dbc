@@ -32,6 +32,9 @@ private[journal] object PostgreSqlJournalDao {
 
   type EntryTags = JList[RTuple2[Long, Set[String]]]
 
+  def insertEntries(handle: Handle) = {
+  }
+
   def insertEntriesQuery(entries: Seq[JournalEntry]): String = {
     val projections = entries.flatMap(it => it.projected).reduceOption(_ + ";" + _)
     val events = "INSERT INTO event (id, persistence_id, sequence_nr, timestamp, payload, manifest, ser_id, ser_manifest, writer_uuid) VALUES " + entries
