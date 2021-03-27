@@ -39,7 +39,7 @@ private[akka] object JournalEntry {
       serManifest: String,
       bytes: Array[Byte],
       tags: Set[String],
-      projection: Option[String]
+      projection: Option[(String, Array[Any])]
   ): JournalEntry = JournalEntry(
     Long.MinValue,
     repr.persistenceId,
@@ -110,5 +110,5 @@ private[akka] final case class JournalEntry(
     serManifest: String = "",
     tags: Set[String] = Set.empty,
     deleted: Boolean = false,
-    projected: Option[String] = None
+    projected: Option[(String, Array[Any])] = None
 )

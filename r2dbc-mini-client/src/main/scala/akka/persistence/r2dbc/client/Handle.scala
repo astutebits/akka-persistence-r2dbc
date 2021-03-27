@@ -96,6 +96,7 @@ final class Handle private(val connection: Connection) {
     require(sql != null, SQL_REQUIRED)
     require(fn != null, FN_REQUIRED)
 
+    println(s"Running query $sql")
     val statement = this.connection.createStatement(sql)
     var count = 0
     bindings.foreach(it => {

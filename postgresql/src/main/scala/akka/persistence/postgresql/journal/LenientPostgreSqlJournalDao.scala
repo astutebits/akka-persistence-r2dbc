@@ -28,15 +28,12 @@ import reactor.core.publisher.Flux
 import reactor.util.function.{Tuple2 => RTuple2}
 import scala.collection.JavaConverters._
 
-private[journal] object PostgreSqlJournalDao {
+private[journal] object LenientPostgreSqlJournalDao {
 
   type EntryTags = JList[RTuple2[Long, Set[String]]]
 
-  def insertEntries(handle: Handle) = {
-  }
-
   def insertEntriesQuery(entries: Seq[JournalEntry]): String = {
-    val projections = entries.flatMap(it => it.projected).reduceOption(_ + ";" + _)
+    val projections = entries.flatMap(it => it.projected.map(_._1)).reduceOption(_ + ";" + _)
     val events = "INSERT INTO event (id, persistence_id, sequence_nr, timestamp, payload, manifest, ser_id, ser_manifest, writer_uuid) VALUES " + entries
         .map(it => s"(DEFAULT, '${it.persistenceId}', ${it.sequenceNr}, ${it.timestamp}, '\\x${hexDump(it.event)}', " +
             s"'${it.eventManifest}', ${it.serId}, '${it.serManifest}', '${it.writerUuid}')")
@@ -76,9 +73,9 @@ private[journal] object PostgreSqlJournalDao {
  *
  * @see [[https://github.com/r2dbc/r2dbc-postgresql r2dbc-postgresql]] for more
  */
-final class PostgreSqlJournalDao(val r2dbc: R2dbc) extends JournalDao {
+final class LenientPostgreSqlJournalDao(val r2dbc: R2dbc) extends JournalDao {
 
-  import PostgreSqlJournalDao._
+  import LenientPostgreSqlJournalDao._
 
   override def writeEvents(events: Seq[JournalEntry]): Source[Int, NotUsed] = {
     val flux: Flux[Integer] = r2dbc.inTransaction((handle: Handle) =>
