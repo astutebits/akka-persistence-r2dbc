@@ -1,6 +1,10 @@
 #!/bin/bash
 set -ex
 
+# Collect the Compose logs for debugging purposes
+docker ps -a
+docker-compose -p akka-persistence -f docker/docker-compose.yml logs
+
 CONTAINER="it"
 
 # Configure the DB connections, changing the configuration settings via system properties
