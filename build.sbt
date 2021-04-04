@@ -1,5 +1,7 @@
 import sbt.Keys.skip
 
+ThisBuild / dynverSonatypeSnapshots := true
+
 lazy val root = (project in file("."))
     .settings(
       name := "akka-persistence-r2dbc-root",
