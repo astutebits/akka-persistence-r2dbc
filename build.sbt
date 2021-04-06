@@ -8,7 +8,7 @@ lazy val root = (project in file("."))
       skip in publish := true,
       crossScalaVersions := Nil,
     )
-    .aggregate(postgresql, mysql, core)
+    .aggregate(postgresql, mysql, core, `r2dbc-mini-client`)
 
 lazy val `r2dbc-mini-client` = Project(id = "r2dbc-mini-client", base = file("r2dbc-mini-client"))
     .settings(
