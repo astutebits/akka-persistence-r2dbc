@@ -83,6 +83,34 @@ final class Handle private(val connection: Connection) {
   }
 
   /**
+   * Executes the given SQL statement, and transforms each [[Result]]s that are returned from
+   * execution.
+   *
+   * @param sql SQL statement
+   * @param fn a function used to transform each [[Result]] into a [[Flux]] of values
+   * @tparam T the type of results
+   * @return the values resulting from the [[Result]] transformation
+   * @throws IllegalArgumentException if `sql` or `fn` is `null`
+   */
+  def executeQuery[T](sql: String, bindings: Seq[Array[Any]], fn: Result => _ <: Publisher[T]): Flux[T] = {
+    require(sql != null, SQL_REQUIRED)
+    require(fn != null, FN_REQUIRED)
+
+    println(s"Running query $sql")
+    val statement = this.connection.createStatement(sql)
+    var count = 0
+    bindings.foreach(it => {
+      it.indices.foreach(i => statement.bind(i, it(i)))
+      count += 1;
+      if (count < bindings.size) {
+        statement.add()
+      }
+    })
+
+    Flux.from(statement.execute).flatMap(fn(_))
+  }
+
+  /**
    * Commits the current transaction.
    *
    * @return a [[Publisher]] that indicates that a transaction has been committed

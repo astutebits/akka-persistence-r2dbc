@@ -44,7 +44,7 @@ private[akka] final class PersistenceReprSerDe(serialization: Serialization)(imp
       case asyncSer: AsyncSerializer => withTransportInformation(() => asyncSer.toBinaryAsync(event))
       case sync => Future(withTransportInformation(() => sync.toBinary(event)))
     }
-    future.map(JournalEntry(repr, serializer.identifier, manifest, _, tags, projection))
+    future.map(JournalEntry(repr, serializer.identifier, manifest, _, tags, projection.map((_, Array.empty[Any]))))
   })
 
   def deserialize(entry: JournalEntry): Future[Try[PersistentRepr]] = {

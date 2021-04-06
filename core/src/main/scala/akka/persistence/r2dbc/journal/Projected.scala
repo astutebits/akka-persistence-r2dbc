@@ -19,7 +19,8 @@ package akka.persistence.r2dbc.journal
 /**
  * Wrap an event in `Projected` to execute the projection `sql` in the same transaction as the event.
  *
- * @param payload the event
- * @param sql The SQL to execute.
+ * @param payload  the event
+ * @param sql      The SQL to execute.
+ * @param bindings The SQL bindings.
  */
-final case class Projected(payload: Any, sql: String)
+final case class Projected(payload: Any, sql: String, bindings: Object*)
