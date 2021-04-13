@@ -30,10 +30,7 @@ private[akka] trait SnapshotStoreDao {
    * @param criteria      selection criteria.
    * @return a single entry [[Source]] with the [[SnapshotEntry]], or empty if not found.
    */
-  def fetchSnapshot(
-      persistenceId: String,
-      criteria: SnapshotSelectionCriteria
-  ): Source[SnapshotEntry, NotUsed]
+  def fetchSnapshot(persistenceId: String, criteria: SnapshotSelectionCriteria): Source[SnapshotEntry, NotUsed]
 
   /**
    * Persists the snapshot entry and returns a [[Source]] with one [[Int]] element with the number
@@ -60,9 +57,6 @@ private[akka] trait SnapshotStoreDao {
    * @param criteria      selection criteria.
    * @return a [[Source]] with one [[Int]] element with the number of rows that were added.
    */
-  def deleteSnapshot(
-      persistenceId: String,
-      criteria: SnapshotSelectionCriteria
-  ): Source[Int, NotUsed]
+  def deleteSnapshot(persistenceId: String, criteria: SnapshotSelectionCriteria): Source[Int, NotUsed]
 
 }

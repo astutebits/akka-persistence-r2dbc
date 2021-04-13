@@ -1,6 +1,10 @@
 #!/bin/bash
 set -ex
 
+# Collect the Compose logs for debugging purposes
+docker ps -a
+docker-compose -p akka-persistence -f docker/docker-compose.yml logs
+
 CONTAINER="it"
 
 # Configure the DB connections, changing the configuration settings via system properties
@@ -9,11 +13,12 @@ PROPS="-Dpostgresql-journal.db.hostname=postgres \
   -Dmysql-journal.db.hostname=mysql \
   -Dmysql-snapshot.db.hostname=mysql"
 
+
 # Run on the compose network
 docker create --name $CONTAINER \
   --network akka-persistence_default \
   -w /build \
-  chmodas/docker-scala-sbt:11 sbt -v $PROPS "++2.12.13 test ; ++2.13.4 test"
+  chmodas/docker-scala-sbt:11 sbt -v $PROPS "+ test"
 
 # Copy the entire build context into the container.
 docker cp . $CONTAINER:/build
@@ -23,6 +28,7 @@ docker cp ~/.sbt $CONTAINER:/root
 docker cp ~/.ivy2 $CONTAINER:/root
 
 # Now that everything is configured and copied, execute the container.
+docker inspect $CONTAINER
 docker start -a $CONTAINER
 
 # TODO: Copy out the test results.
