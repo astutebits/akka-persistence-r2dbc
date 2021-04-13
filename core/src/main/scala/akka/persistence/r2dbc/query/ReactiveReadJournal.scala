@@ -20,7 +20,7 @@ import akka.NotUsed
 import akka.actor.ExtendedActorSystem
 import akka.persistence.query.scaladsl._
 import akka.persistence.query.{ EventEnvelope, NoOffset, Offset, Sequence }
-import akka.persistence.r2dbc.journal.{ JournalEntry, PersistenceReprSerDe, PersistenceReprSerializer }
+import akka.persistence.r2dbc.journal.{ JournalEntry, PersistenceReprSerDe }
 import akka.serialization.SerializationExtension
 import akka.stream.scaladsl.Source
 
