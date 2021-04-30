@@ -17,7 +17,7 @@
 package akka.persistence.r2dbc
 
 import com.typesafe.config.Config
-import java.time.{Duration => JDuration}
+import java.time.{ Duration => JDuration }
 
 private[akka] case class DatabaseConfig(connection: Config, pool: Config) {
   val hostname: String = connection.getString("hostname")

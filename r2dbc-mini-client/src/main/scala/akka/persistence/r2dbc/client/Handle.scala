@@ -16,10 +16,10 @@
 
 package akka.persistence.r2dbc.client
 
-import akka.persistence.r2dbc.client.ReactiveUtils.{appendError, passThrough}
-import io.r2dbc.spi.{Connection, Result}
+import akka.persistence.r2dbc.client.ReactiveUtils.{ appendError, passThrough }
+import io.r2dbc.spi.{ Connection, Result }
 import org.reactivestreams.Publisher
-import reactor.core.publisher.{Flux, Mono}
+import reactor.core.publisher.{ Flux, Mono }
 
 object Handle {
 
@@ -43,9 +43,9 @@ object Handle {
 /**
  * A wrapper for a [[Connection]] providing convenience APIs.
  */
-final class Handle private(val connection: Connection) {
+final class Handle private (val connection: Connection) {
 
-  import Handle.{FN_REQUIRED, SQL_REQUIRED}
+  import Handle.{ FN_REQUIRED, SQL_REQUIRED }
 
   /**
    * Execute behavior within a transaction returning results. The transaction is committed if the
@@ -60,10 +60,11 @@ final class Handle private(val connection: Connection) {
    */
   def inTransaction[T](fn: Handle => _ <: Publisher[T]): Flux[T] = {
     require(fn != null, FN_REQUIRED)
-    Mono.from(beginTransaction)
-        .thenMany(fn.apply(this))
-        .concatWith(passThrough(() => this.commitTransaction))
-        .onErrorResume(appendError(() => this.rollbackTransaction))
+    Mono
+      .from(beginTransaction)
+      .thenMany(fn.apply(this))
+      .concatWith(passThrough(() => this.commitTransaction))
+      .onErrorResume(appendError(() => this.rollbackTransaction))
   }
 
   /**

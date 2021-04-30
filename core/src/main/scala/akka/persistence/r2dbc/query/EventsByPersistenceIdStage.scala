@@ -29,8 +29,7 @@ private[query] object EventsByPersistenceIdStage {
       persistenceId: String,
       fromSeqNr: Long,
       toSeqNr: Long,
-      refreshInterval: Option[FiniteDuration] = None
-  ): EventsByPersistenceIdStage =
+      refreshInterval: Option[FiniteDuration] = None): EventsByPersistenceIdStage =
     new EventsByPersistenceIdStage(dao, persistenceId, fromSeqNr, toSeqNr, refreshInterval)
 
 }
@@ -38,13 +37,13 @@ private[query] object EventsByPersistenceIdStage {
 /**
  * Walks the journal entries returning any events that match the given persistence ID.
  */
-private[query] final class EventsByPersistenceIdStage private(
+final private[query] class EventsByPersistenceIdStage private (
     dao: QueryDao,
     persistenceId: String,
     fromSeqNr: Long,
     toSeqNr: Long,
-    val refreshInterval: Option[FiniteDuration]
-) extends EventsByStage {
+    val refreshInterval: Option[FiniteDuration])
+    extends EventsByStage {
 
   require(dao != null, "the 'dao' must be provided")
   require(persistenceId != null && persistenceId.nonEmpty, "the 'persistenceId' must be provided")
@@ -64,18 +63,19 @@ private[query] final class EventsByPersistenceIdStage private(
   }
 
   override protected def fetchEvents(): Source[JournalEntry, NotUsed] =
-    dao.findHighestSeq(persistenceId)
-        .flatMapConcat(highestSeq => {
-          if (targetSeq == highestSeq) {
-            Source.empty
-          } else {
-            targetSeq = if (highestSeq >= toSeqNr) {
-              completeSwitch.set(true)
-              toSeqNr
-            } else highestSeq
+    dao
+      .findHighestSeq(persistenceId)
+      .flatMapConcat(highestSeq => {
+        if (targetSeq == highestSeq) {
+          Source.empty
+        } else {
+          targetSeq = if (highestSeq >= toSeqNr) {
+            completeSwitch.set(true)
+            toSeqNr
+          } else highestSeq
 
-            dao.fetchByPersistenceId(persistenceId, if (processedEntries == 0) currentSeq else currentSeq + 1, targetSeq)
-          }
-        })
+          dao.fetchByPersistenceId(persistenceId, if (processedEntries == 0) currentSeq else currentSeq + 1, targetSeq)
+        }
+      })
 
 }

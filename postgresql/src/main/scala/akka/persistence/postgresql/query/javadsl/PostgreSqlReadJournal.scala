@@ -17,9 +17,9 @@
 package akka.persistence.postgresql.query.javadsl
 
 import akka.NotUsed
-import akka.persistence.postgresql.query.scaladsl.{PostgreSqlReadJournal => ScalaPostgresqlReadJournal}
+import akka.persistence.postgresql.query.scaladsl.{ PostgreSqlReadJournal => ScalaPostgresqlReadJournal }
 import akka.persistence.query.javadsl._
-import akka.persistence.query.{EventEnvelope, Offset}
+import akka.persistence.query.{ EventEnvelope, Offset }
 import akka.stream.javadsl.Source
 
 object PostgreSqlReadJournal {
@@ -34,6 +34,7 @@ object PostgreSqlReadJournal {
   final val Identifier = ScalaPostgresqlReadJournal.Identifier
 
 }
+
 /**
  * Java API: `akka.persistence.query.javadsl.ReadJournal` implementation for PostgreSQL
  * with R2DBC a driver.
@@ -49,16 +50,15 @@ object PostgreSqlReadJournal {
  * Configuration settings can be defined in the configuration section with the
  * absolute path corresponding to the identifier, which is `"postgresql-read-journal"`
  * for the default [[PostgreSqlReadJournal#Identifier]]. See `reference.conf`.
- *
  */
 final class PostgreSqlReadJournal(readJournal: ScalaPostgresqlReadJournal)
     extends ReadJournal
-        with CurrentPersistenceIdsQuery
-        with PersistenceIdsQuery
-        with CurrentEventsByPersistenceIdQuery
-        with EventsByPersistenceIdQuery
-        with CurrentEventsByTagQuery
-        with EventsByTagQuery {
+    with CurrentPersistenceIdsQuery
+    with PersistenceIdsQuery
+    with CurrentEventsByPersistenceIdQuery
+    with EventsByPersistenceIdQuery
+    with CurrentEventsByTagQuery
+    with EventsByTagQuery {
 
   override def currentPersistenceIds(): Source[String, NotUsed] =
     readJournal.currentPersistenceIds().asJava
@@ -69,15 +69,13 @@ final class PostgreSqlReadJournal(readJournal: ScalaPostgresqlReadJournal)
   override def currentEventsByPersistenceId(
       persistenceId: String,
       fromSequenceNr: Long,
-      toSequenceNr: Long
-  ): Source[EventEnvelope, NotUsed] =
+      toSequenceNr: Long): Source[EventEnvelope, NotUsed] =
     readJournal.currentEventsByPersistenceId(persistenceId, fromSequenceNr, toSequenceNr).asJava
 
   override def eventsByPersistenceId(
       persistenceId: String,
       fromSequenceNr: Long,
-      toSequenceNr: Long
-  ): Source[EventEnvelope, NotUsed] =
+      toSequenceNr: Long): Source[EventEnvelope, NotUsed] =
     readJournal.eventsByPersistenceId(persistenceId, fromSequenceNr, toSequenceNr).asJava
 
   override def currentEventsByTag(tag: String, offset: Offset): Source[EventEnvelope, NotUsed] =
