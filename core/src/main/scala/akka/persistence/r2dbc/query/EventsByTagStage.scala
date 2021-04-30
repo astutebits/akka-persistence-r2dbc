@@ -28,20 +28,20 @@ private[query] object EventsByTagStage {
       dao: QueryDao,
       tag: String,
       offset: Long,
-      refreshInterval: Option[FiniteDuration] = None
-  ): EventsByTagStage = new EventsByTagStage(dao, tag, offset, refreshInterval)
+      refreshInterval: Option[FiniteDuration] = None): EventsByTagStage =
+    new EventsByTagStage(dao, tag, offset, refreshInterval)
 
 }
 
 /**
  * Walks the journal entries returning any events that match the given tag.
  */
-private[query] final class EventsByTagStage private(
+final private[query] class EventsByTagStage private (
     dao: QueryDao,
     tag: String,
     offset: Long,
-    val refreshInterval: Option[FiniteDuration]
-) extends EventsByStage {
+    val refreshInterval: Option[FiniteDuration])
+    extends EventsByStage {
 
   require(dao != null, "the 'dao' must be provided")
   require(tag != null && tag.nonEmpty, "the 'tag' must be provided")
@@ -59,14 +59,15 @@ private[query] final class EventsByTagStage private(
   }
 
   override protected def fetchEvents(): Source[JournalEntry, NotUsed] =
-    dao.findHighestIndex(tag)
-        .flatMapConcat(result => {
-          if (targetIndex == result) {
-            Source.empty
-          } else {
-            targetIndex = result
-            dao.fetchByTag(tag, if (processedEntries == 0) currentIndex else currentIndex + 1, targetIndex)
-          }
-        })
+    dao
+      .findHighestIndex(tag)
+      .flatMapConcat(result => {
+        if (targetIndex == result) {
+          Source.empty
+        } else {
+          targetIndex = result
+          dao.fetchByTag(tag, if (processedEntries == 0) currentIndex else currentIndex + 1, targetIndex)
+        }
+      })
 
 }
