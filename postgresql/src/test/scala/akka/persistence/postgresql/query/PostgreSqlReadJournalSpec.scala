@@ -17,22 +17,24 @@
 package akka.persistence.postgresql.query
 
 import akka.persistence.postgresql.Schema
-import akka.persistence.query.{AllPersistenceIdSpec, EventsByPersistenceIdSpec, EventsByTagSpec, ReadJournalSpec}
+import akka.persistence.query.{ AllPersistenceIdSpec, EventsByPersistenceIdSpec, EventsByTagSpec, ReadJournalSpec }
 import akka.persistence.r2dbc.client.R2dbc
 import com.typesafe.config.ConfigFactory
-import io.r2dbc.postgresql.{PostgresqlConnectionConfiguration, PostgresqlConnectionFactory}
+import io.r2dbc.postgresql.{ PostgresqlConnectionConfiguration, PostgresqlConnectionFactory }
 import org.scalatest.BeforeAndAfterEach
 import org.scalatest.concurrent.Eventually
 import scala.concurrent.duration._
 
 object PostgreSqlReadJournalSpec {
 
-  private val Config = ConfigFactory.parseString(
+  private val cfgStr =
     """
       |akka.persistence.journal.plugin = "postgresql-journal"
       |akka.persistence.publish-plugin-commands = on
       |akka.actor.allow-java-serialization = on
-      |""".stripMargin)
+      |""".stripMargin
+
+  private val Config = ConfigFactory.parseString(cfgStr)
 
 }
 
@@ -41,25 +43,25 @@ object PostgreSqlReadJournalSpec {
  */
 final class PostgreSqlReadJournalSpec
     extends ReadJournalSpec(PostgreSqlReadJournalSpec.Config)
-        with AllPersistenceIdSpec
-        with EventsByTagSpec
-        with EventsByPersistenceIdSpec
-        with Eventually
-        with BeforeAndAfterEach {
+    with AllPersistenceIdSpec
+    with EventsByTagSpec
+    with EventsByPersistenceIdSpec
+    with Eventually
+    with BeforeAndAfterEach {
 
   private val r2dbc = R2dbc(
-    new PostgresqlConnectionFactory(PostgresqlConnectionConfiguration.builder()
+    new PostgresqlConnectionFactory(
+      PostgresqlConnectionConfiguration
+        .builder()
         .host(system.settings.config.getString("postgresql-journal.db.hostname"))
         .username("postgres")
         .password("s3cr3t")
         .database("db")
-        .build())
-  )
+        .build()))
 
   override def beforeAll(): Unit = {
     eventually(timeout(60.seconds), interval(1.second)) {
-      r2dbc.withHandle(_.executeQuery(Schema.SQL + "DELETE FROM event; DELETE FROM tag;", _.getRowsUpdated))
-          .blockLast()
+      r2dbc.withHandle(_.executeQuery(Schema.SQL + "DELETE FROM event; DELETE FROM tag;", _.getRowsUpdated)).blockLast()
     }
 
     super.beforeAll()

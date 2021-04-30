@@ -31,9 +31,10 @@ final class HandleSpec extends AnyFlatSpecLike with Matchers {
   "Handle" should "commit successful transaction" in {
     val connection = MockConnection.empty
 
-    StepVerifier.create(Handle(connection).inTransaction((_: Handle) => Mono.just(100)))
-        .expectNext(100)
-        .verifyComplete()
+    StepVerifier
+      .create(Handle(connection).inTransaction((_: Handle) => Mono.just(100)))
+      .expectNext(100)
+      .verifyComplete()
 
     connection.isBeginTransactionCalled shouldBe true
     connection.isCommitTransactionCalled shouldBe true
@@ -43,34 +44,34 @@ final class HandleSpec extends AnyFlatSpecLike with Matchers {
     val connection = MockConnection.empty
     val exception = new IllegalArgumentException("Boom")
 
-    StepVerifier.create(Handle(connection).inTransaction[Int]((_: Handle) => Mono.error[Int](exception)))
-        .expectErrorMessage(exception.getMessage)
-        .verify()
+    StepVerifier
+      .create(Handle(connection).inTransaction[Int]((_: Handle) => Mono.error[Int](exception)))
+      .expectErrorMessage(exception.getMessage)
+      .verify()
 
     connection.isBeginTransactionCalled shouldBe true
     connection.isRollbackTransactionCalled shouldBe true
   }
 
   it should "execute query" in {
-    val metadata = MockRowMetadata.builder()
-        .columnMetadata(MockColumnMetadata.builder()
-            .name("id").nativeTypeMetadata(100)
-            .build())
-        .build()
+    val metadata = MockRowMetadata
+      .builder()
+      .columnMetadata(MockColumnMetadata.builder().name("id").nativeTypeMetadata(100).build())
+      .build()
     val row1 = MockRow.builder.identified("id", classOf[Integer], 1).build
     val row2 = MockRow.builder.identified("id", classOf[Integer], 2).build
-    val result = MockResult.builder()
-        .rowMetadata(metadata)
-        .row(row1, row2)
-        .build()
+    val result = MockResult.builder().rowMetadata(metadata).row(row1, row2).build()
     val statement = MockStatement.builder.result(result).build()
     val connection = MockConnection.builder.statement(statement).build
 
-    StepVerifier.create(Handle(connection).executeQuery[Integer]("SELECT id FROM table",
-      (result: Result) => result.map((row, _) => row.get("id", classOf[Integer]))))
-        .expectNext(1)
-        .expectNext(2)
-        .verifyComplete()
+    StepVerifier
+      .create(
+        Handle(connection).executeQuery[Integer](
+          "SELECT id FROM table",
+          (result: Result) => result.map((row, _) => row.get("id", classOf[Integer]))))
+      .expectNext(1)
+      .expectNext(2)
+      .verifyComplete()
 
     connection.getCreateStatementSql shouldBe "SELECT id FROM table"
   }

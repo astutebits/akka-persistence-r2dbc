@@ -19,24 +19,25 @@ package akka.persistence.mysql.snapshot
 import akka.NotUsed
 import akka.persistence.SnapshotSelectionCriteria
 import akka.persistence.r2dbc.client.R2dbc
+import akka.persistence.r2dbc.snapshot.{ SnapshotEntry, SnapshotStoreDao }
 import akka.persistence.r2dbc.snapshot.ResultUtils.entryOf
-import akka.persistence.r2dbc.snapshot.{SnapshotEntry, SnapshotStoreDao}
 import akka.stream.scaladsl.Source
 import io.netty.buffer.ByteBufUtil
-import java.lang.{Long => JLong}
+
+import java.lang.{ Long => JLong }
 
 private[snapshot] object MySqlSnapshotStoreDao {
 
   def fetchSnapshotQuery(persistenceId: String, criteria: SnapshotSelectionCriteria): String =
     "SELECT persistence_id, sequence_nr, instant, snapshot FROM snapshot" +
-        s" WHERE persistence_id = '$persistenceId'" +
-        selectionCriteria(criteria) + " ORDER BY sequence_nr DESC LIMIT 1"
+    s" WHERE persistence_id = '$persistenceId'" +
+    selectionCriteria(criteria) + " ORDER BY sequence_nr DESC LIMIT 1"
 
   def upsertSnapshotQuery(entry: SnapshotEntry): String = {
     val snapshotHex = ByteBufUtil.hexDump(entry.snapshot)
     "INSERT INTO snapshot (persistence_id, sequence_nr, instant, snapshot) VALUES (" +
-        s"'${entry.persistenceId}', ${entry.sequenceNr}, ${entry.instant}, x'$snapshotHex')" +
-        s" ON DUPLICATE KEY UPDATE instant = ${entry.instant}, snapshot = x'$snapshotHex'"
+    s"'${entry.persistenceId}', ${entry.sequenceNr}, ${entry.instant}, x'$snapshotHex')" +
+    s" ON DUPLICATE KEY UPDATE instant = ${entry.instant}, snapshot = x'$snapshotHex'"
   }
 
   def deleteSnapshotQuery(persistenceId: String, seqNr: Long): String =
@@ -56,23 +57,25 @@ private[snapshot] object MySqlSnapshotStoreDao {
 
 }
 
-private[snapshot] final class MySqlSnapshotStoreDao(val r2dbc: R2dbc) extends SnapshotStoreDao {
+final private[snapshot] class MySqlSnapshotStoreDao(val r2dbc: R2dbc) extends SnapshotStoreDao {
 
   import MySqlSnapshotStoreDao._
 
-  override def fetchSnapshot(persistenceId: String, criteria: SnapshotSelectionCriteria): Source[SnapshotEntry, NotUsed] =
+  override def fetchSnapshot(
+      persistenceId: String,
+      criteria: SnapshotSelectionCriteria): Source[SnapshotEntry, NotUsed] =
     Source.fromPublisher(r2dbc.withHandle(_.executeQuery(fetchSnapshotQuery(persistenceId, criteria), entryOf)))
 
-  override def save(entry: SnapshotEntry): Source[Int, NotUsed] = Source.fromPublisher(
-    r2dbc.withHandle(_.executeQuery(upsertSnapshotQuery(entry), _.getRowsUpdated))
-  ).map(_.toInt)
+  override def save(entry: SnapshotEntry): Source[Int, NotUsed] =
+    Source.fromPublisher(r2dbc.withHandle(_.executeQuery(upsertSnapshotQuery(entry), _.getRowsUpdated))).map(_.toInt)
 
-  override def deleteSnapshot(persistenceId: String, seqNr: Long): Source[Int, NotUsed] = Source.fromPublisher(
-    r2dbc.withHandle(_.executeQuery(deleteSnapshotQuery(persistenceId, seqNr), _.getRowsUpdated))
-  ).map(_.toInt)
+  override def deleteSnapshot(persistenceId: String, seqNr: Long): Source[Int, NotUsed] = Source
+    .fromPublisher(r2dbc.withHandle(_.executeQuery(deleteSnapshotQuery(persistenceId, seqNr), _.getRowsUpdated)))
+    .map(_.toInt)
 
   override def deleteSnapshot(persistenceId: String, criteria: SnapshotSelectionCriteria): Source[Int, NotUsed] =
-    Source.fromPublisher(r2dbc.withHandle(_.executeQuery(deleteSnapshotQuery(persistenceId, criteria), _.getRowsUpdated)))
-        .map(_.toInt)
+    Source
+      .fromPublisher(r2dbc.withHandle(_.executeQuery(deleteSnapshotQuery(persistenceId, criteria), _.getRowsUpdated)))
+      .map(_.toInt)
 
 }

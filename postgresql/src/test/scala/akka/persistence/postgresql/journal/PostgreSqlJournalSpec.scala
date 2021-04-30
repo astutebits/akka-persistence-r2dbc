@@ -21,17 +21,19 @@ import akka.persistence.journal.JournalSpec
 import akka.persistence.postgresql.Schema
 import akka.persistence.r2dbc.client.R2dbc
 import com.typesafe.config.ConfigFactory
-import io.r2dbc.postgresql.{PostgresqlConnectionConfiguration, PostgresqlConnectionFactory}
+import io.r2dbc.postgresql.{ PostgresqlConnectionConfiguration, PostgresqlConnectionFactory }
 import org.scalatest.concurrent.Eventually
 import scala.concurrent.duration._
 
 object PostgreSqlJournalSpec {
 
-  private val JournalPluginConfig = ConfigFactory.parseString(
+  private val cfgStr =
     """
       |akka.persistence.journal.plugin = "postgresql-journal"
       |akka.loglevel = "DEBUG"
-      |""".stripMargin)
+      |""".stripMargin
+
+  private val JournalPluginConfig = ConfigFactory.parseString(cfgStr)
 }
 
 /**
@@ -39,22 +41,28 @@ object PostgreSqlJournalSpec {
  */
 final class PostgreSqlJournalSpec
     extends JournalSpec(config = PostgreSqlJournalSpec.JournalPluginConfig)
-        with Eventually with ProjectionExtensionSpec {
+    with Eventually
+    with ProjectionExtensionSpec {
 
   protected val r2dbc: R2dbc = R2dbc(
-    new PostgresqlConnectionFactory(PostgresqlConnectionConfiguration.builder()
+    new PostgresqlConnectionFactory(
+      PostgresqlConnectionConfiguration
+        .builder()
         .host(system.settings.config.getString("postgresql-journal.db.hostname"))
         .username("postgres")
         .password("s3cr3t")
         .database("db")
-        .build())
-  )
+        .build()))
 
   override def beforeAll(): Unit = {
     eventually(timeout(60.seconds), interval(1.second)) {
-      r2dbc.withHandle(handle => handle.executeQuery(Schema.SQL + "TRUNCATE event, tag; " +
-          "CREATE TABLE IF NOT EXISTS projected (id varchar(255), value text);", _.getRowsUpdated
-      )).blockLast()
+      r2dbc
+        .withHandle(handle =>
+          handle.executeQuery(
+            Schema.SQL + "TRUNCATE event, tag; " +
+            "CREATE TABLE IF NOT EXISTS projected (id varchar(255), value text);",
+            _.getRowsUpdated))
+        .blockLast()
     }
 
     super.beforeAll()

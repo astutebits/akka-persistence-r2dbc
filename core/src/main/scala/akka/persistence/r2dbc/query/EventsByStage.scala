@@ -20,7 +20,7 @@ import akka.NotUsed
 import akka.persistence.r2dbc.journal.JournalEntry
 import akka.stream.scaladsl.Source
 import akka.stream.stage._
-import akka.stream.{Attributes, Outlet, SourceShape}
+import akka.stream.{ Attributes, Outlet, SourceShape }
 import java.util.concurrent.atomic.AtomicBoolean
 import scala.concurrent.duration.FiniteDuration
 
@@ -30,7 +30,7 @@ private[query] object EventsByStage {
 
 }
 
-private[query] abstract class EventsByStage extends GraphStage[SourceShape[JournalEntry]] {
+abstract private[query] class EventsByStage extends GraphStage[SourceShape[JournalEntry]] {
 
   import EventsByStage.PollTimerKey
 
@@ -39,14 +39,17 @@ private[query] abstract class EventsByStage extends GraphStage[SourceShape[Journ
 
   private val out: Outlet[JournalEntry] = Outlet("Event.out")
 
-  final override def createLogic(attributes: Attributes): GraphStageLogic = new TimerGraphStageLogic(shape) with InHandler with OutHandler {
+  final override def createLogic(attributes: Attributes): GraphStageLogic = new TimerGraphStageLogic(shape)
+    with InHandler
+    with OutHandler {
     private var sinkIn: SubSinkInlet[JournalEntry] = _
 
     // Initial handler (until the SubSinkInlet is attached)
-    setHandler(out, new OutHandler {
-      def onPull(): Unit = {
-      }
-    })
+    setHandler(
+      out,
+      new OutHandler {
+        def onPull(): Unit = {}
+      })
 
     override def preStart(): Unit = {
       runStage()
