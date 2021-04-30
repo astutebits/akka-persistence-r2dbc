@@ -17,7 +17,7 @@
 package akka.persistence.r2dbc.client
 
 import org.reactivestreams.Publisher
-import reactor.core.publisher.{Flux, Mono}
+import reactor.core.publisher.{ Flux, Mono }
 import java.util.function
 
 /**

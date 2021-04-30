@@ -250,5 +250,5 @@ $RECYCLE.BIN/
 # Windows shortcuts
 *.lnk
 
-
+.bsp
 # End of https://www.gitignore.io/api/osx,java,linux,maven,windows,eclipse,netbeans,intellij+all,visualstudiocode
