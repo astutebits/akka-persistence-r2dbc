@@ -19,7 +19,7 @@ package akka.persistence.mysql.query.scaladsl
 import akka.actor.ExtendedActorSystem
 import akka.persistence.r2dbc.ConnectionPoolFactory
 import akka.persistence.r2dbc.client.R2dbc
-import akka.persistence.r2dbc.query.{QueryDao, ReactiveReadJournal, ReadJournalConfig}
+import akka.persistence.r2dbc.query.{ QueryDao, ReactiveReadJournal, ReadJournalConfig }
 import com.typesafe.config.Config
 
 private[akka] object MySqlReadJournal {
@@ -50,7 +50,7 @@ private[akka] object MySqlReadJournal {
  * absolute path corresponding to the identifier, which is `"mysql-read-journal"`
  * for the default [[MySqlReadJournal#Identifier]]. See `reference.conf`.
  */
-private[query] final class MySqlReadJournal(val system: ExtendedActorSystem, config: Config)
+final private[query] class MySqlReadJournal(val system: ExtendedActorSystem, config: Config)
     extends ReactiveReadJournal {
 
   override protected val dao: QueryDao =

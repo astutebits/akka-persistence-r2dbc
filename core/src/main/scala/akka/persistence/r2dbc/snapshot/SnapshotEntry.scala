@@ -16,7 +16,7 @@
 
 package akka.persistence.r2dbc.snapshot
 
-import java.lang.{Long => JLong}
+import java.lang.{ Long => JLong }
 
 private[akka] object SnapshotEntry {
 
@@ -25,9 +25,8 @@ private[akka] object SnapshotEntry {
 
 }
 
-private[akka] final case class SnapshotEntry(
+final private[akka] case class SnapshotEntry(
     persistenceId: String,
     sequenceNr: Long,
     instant: Long,
-    snapshot: Array[Byte]
-)
+    snapshot: Array[Byte])

@@ -13,7 +13,8 @@ import scala.util.Random
 package object query {
   val Random = new Random()
 
-  /** Returns a pseudorandom, uniformly distributed long value between 0
+  /**
+   * Returns a pseudorandom, uniformly distributed long value between 0
    *  (inclusive) and the specified value (exclusive), drawn from this
    *  random number generator's sequence.
    */
@@ -36,7 +37,8 @@ package object query {
     offset + Random.nextInt(_n.toInt)
   }
 
-  /** Returns a pseudorandom, uniformly distributed long value between min
+  /**
+   * Returns a pseudorandom, uniformly distributed long value between min
    *  (inclusive) and the specified value max (exclusive), drawn from this
    *  random number generator's sequence.
    */
@@ -59,6 +61,5 @@ package object query {
       loop()
     }
   }
-
 
 }

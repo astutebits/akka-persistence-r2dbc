@@ -23,7 +23,7 @@ import akka.stream.scaladsl.Source
 import akka.stream.testkit.scaladsl.TestSink
 import akka.testkit.TestKit
 import org.mockito.scalatest.ResetMocksAfterEachTest
-import org.mockito.{ArgumentMatchersSugar, IdiomaticMockito}
+import org.mockito.{ ArgumentMatchersSugar, IdiomaticMockito }
 import org.scalatest.BeforeAndAfterAll
 import org.scalatest.flatspec.AnyFlatSpecLike
 import org.scalatest.matchers.should.Matchers
@@ -35,14 +35,14 @@ import scala.concurrent.duration._
  */
 final class EventsByPersistenceIdStageSpec
     extends AnyFlatSpecLike
-        with IdiomaticMockito
-        with ResetMocksAfterEachTest
-        with Matchers
-        with ArgumentMatchersSugar
-        with BeforeAndAfterAll {
+    with IdiomaticMockito
+    with ResetMocksAfterEachTest
+    with Matchers
+    with ArgumentMatchersSugar
+    with BeforeAndAfterAll {
 
-  private implicit val system: ActorSystem = ActorSystem()
-  private implicit val mat: Materializer = Materializer(system)
+  implicit private val system: ActorSystem = ActorSystem()
+  implicit private val mat: Materializer = Materializer(system)
 
   private val dao: QueryDao = mock[QueryDao]
 
@@ -98,19 +98,19 @@ final class EventsByPersistenceIdStageSpec
     val events = List(
       JournalEntry(1, pId, 1, "test-value".getBytes, tags = Set("FooEvent")),
       JournalEntry(3, pId, 2, "test-value-2".getBytes, tags = Set("FooEvent")),
-      JournalEntry(5, pId, 3, "test-value-3".getBytes, tags = Set("FooEvent"))
-    )
+      JournalEntry(5, pId, 3, "test-value-3".getBytes, tags = Set("FooEvent")))
 
-    dao.findHighestSeq(pId) returns Source.single(3)
-    dao.fetchByPersistenceId(pId, 1, 3) returns Source(events)
+    dao.findHighestSeq(pId).returns(Source.single(3))
+    dao.fetchByPersistenceId(pId, 1, 3).returns(Source(events))
 
-    Source.fromGraph(EventsByPersistenceIdStage(dao, pId, 1, 3))
-        .runWith(TestSink.probe[JournalEntry])
-        .ensureSubscription()
-        .requestNext(events.head)
-        .requestNext(events(1))
-        .requestNext(events.last)
-        .expectComplete()
+    Source
+      .fromGraph(EventsByPersistenceIdStage(dao, pId, 1, 3))
+      .runWith(TestSink.probe[JournalEntry])
+      .ensureSubscription()
+      .requestNext(events.head)
+      .requestNext(events(1))
+      .requestNext(events.last)
+      .expectComplete()
   }
 
   it should "pick the real toSeqNr regardless of the user input when fetching current events" in {
@@ -118,19 +118,19 @@ final class EventsByPersistenceIdStageSpec
     val events = List(
       JournalEntry(1, pId, 1, "test-value".getBytes, tags = Set("FooEvent")),
       JournalEntry(3, pId, 2, "test-value-2".getBytes, tags = Set("FooEvent")),
-      JournalEntry(5, pId, 3, "test-value-3".getBytes, tags = Set("FooEvent"))
-    )
+      JournalEntry(5, pId, 3, "test-value-3".getBytes, tags = Set("FooEvent")))
 
-    dao.findHighestSeq(pId) returns Source.single(3)
-    dao.fetchByPersistenceId(pId, 0, 3) returns Source(events)
+    dao.findHighestSeq(pId).returns(Source.single(3))
+    dao.fetchByPersistenceId(pId, 0, 3).returns(Source(events))
 
-    Source.fromGraph(EventsByPersistenceIdStage(dao, pId, 0, Long.MaxValue))
-        .runWith(TestSink.probe[JournalEntry])
-        .ensureSubscription()
-        .requestNext(events.head)
-        .requestNext(events(1))
-        .requestNext(events.last)
-        .expectComplete()
+    Source
+      .fromGraph(EventsByPersistenceIdStage(dao, pId, 0, Long.MaxValue))
+      .runWith(TestSink.probe[JournalEntry])
+      .ensureSubscription()
+      .requestNext(events.head)
+      .requestNext(events(1))
+      .requestNext(events.last)
+      .expectComplete()
   }
 
   it should "fetch events until the given subset is returned if 'refreshInterval' is defined" in {
@@ -138,26 +138,25 @@ final class EventsByPersistenceIdStageSpec
     val firstSet = Seq(
       JournalEntry(1, pId, 1, "test-value".getBytes, tags = Set("FooEvent")),
       JournalEntry(3, pId, 2, "test-value-2".getBytes, tags = Set("FooEvent")),
-      JournalEntry(5, pId, 3, "test-value-3".getBytes, tags = Set("FooEvent"))
-    )
+      JournalEntry(5, pId, 3, "test-value-3".getBytes, tags = Set("FooEvent")))
     val secondSet = Seq(
       JournalEntry(7, pId, 4, "test-value-4".getBytes, tags = Set("FooEvent")),
-      JournalEntry(9, pId, 5, "test-value-5".getBytes, tags = Set("FooEvent"))
-    )
+      JournalEntry(9, pId, 5, "test-value-5".getBytes, tags = Set("FooEvent")))
 
-    dao.findHighestSeq(pId) returns Source.single(3) andThen Source.single(5)
-    dao.fetchByPersistenceId(pId, 1, 3) returns Source(firstSet)
-    dao.fetchByPersistenceId(pId, 4, 5) returns Source(secondSet)
+    dao.findHighestSeq(pId).returns(Source.single(3)).andThen(Source.single(5))
+    dao.fetchByPersistenceId(pId, 1, 3).returns(Source(firstSet))
+    dao.fetchByPersistenceId(pId, 4, 5).returns(Source(secondSet))
 
-    Source.fromGraph(EventsByPersistenceIdStage(dao, pId, 1, 5, Some(100.millis)))
-        .runWith(TestSink.probe[JournalEntry])
-        .ensureSubscription()
-        .requestNext(firstSet.head)
-        .requestNext(firstSet(1))
-        .requestNext(firstSet.last)
-        .requestNext(secondSet.head)
-        .requestNext(secondSet.last)
-        .expectComplete()
+    Source
+      .fromGraph(EventsByPersistenceIdStage(dao, pId, 1, 5, Some(100.millis)))
+      .runWith(TestSink.probe[JournalEntry])
+      .ensureSubscription()
+      .requestNext(firstSet.head)
+      .requestNext(firstSet(1))
+      .requestNext(firstSet.last)
+      .requestNext(secondSet.head)
+      .requestNext(secondSet.last)
+      .expectComplete()
   }
 
   it should "fetch events indefinitely when refreshInterval is specified" in {
@@ -165,28 +164,27 @@ final class EventsByPersistenceIdStageSpec
     val firstSet = Seq(
       JournalEntry(1, pId, 1, "test-value".getBytes, tags = Set("FooEvent")),
       JournalEntry(3, pId, 2, "test-value-2".getBytes, tags = Set("FooEvent")),
-      JournalEntry(5, pId, 3, "test-value-3".getBytes, tags = Set("FooEvent"))
-    )
+      JournalEntry(5, pId, 3, "test-value-3".getBytes, tags = Set("FooEvent")))
     val secondSet = Seq(
       JournalEntry(7, pId, 4, "test-value-4".getBytes, tags = Set("FooEvent")),
-      JournalEntry(9, pId, 5, "test-value-5".getBytes, tags = Set("FooEvent"))
-    )
+      JournalEntry(9, pId, 5, "test-value-5".getBytes, tags = Set("FooEvent")))
 
-    dao.findHighestSeq(pId) returns Source.single(3) andThen Source.single(5)
-    dao.fetchByPersistenceId(pId, 0, 3) returns Source(firstSet)
-    dao.fetchByPersistenceId(pId, 4, 5) returns Source(secondSet)
+    dao.findHighestSeq(pId).returns(Source.single(3)).andThen(Source.single(5))
+    dao.fetchByPersistenceId(pId, 0, 3).returns(Source(firstSet))
+    dao.fetchByPersistenceId(pId, 4, 5).returns(Source(secondSet))
 
-    Source.fromGraph(EventsByPersistenceIdStage(dao, pId, 0, Long.MaxValue, Some(100.millis)))
-        .runWith(TestSink.probe[JournalEntry])
-        .ensureSubscription()
-        .requestNext(firstSet.head)
-        .requestNext(firstSet(1))
-        .requestNext(firstSet.last)
-        .requestNext(secondSet.head)
-        .requestNext(secondSet.last)
-        .request(1)
-        .expectNoMessage(200.millis)
-        .cancel()
+    Source
+      .fromGraph(EventsByPersistenceIdStage(dao, pId, 0, Long.MaxValue, Some(100.millis)))
+      .runWith(TestSink.probe[JournalEntry])
+      .ensureSubscription()
+      .requestNext(firstSet.head)
+      .requestNext(firstSet(1))
+      .requestNext(firstSet.last)
+      .requestNext(secondSet.head)
+      .requestNext(secondSet.last)
+      .request(1)
+      .expectNoMessage(200.millis)
+      .cancel()
   }
 
 }

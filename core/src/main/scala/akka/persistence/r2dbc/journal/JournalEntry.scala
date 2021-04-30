@@ -17,14 +17,14 @@
 package akka.persistence.r2dbc.journal
 
 import akka.persistence.PersistentRepr
-import java.lang.{Integer => JInt, Long => JLong}
+import java.lang.{ Integer => JInt, Long => JLong }
 import java.time.Instant
 
 private[akka] object JournalEntry {
 
   /**
    * Extends a journal message with Tagging and Atomic Projections,
-   * the outcome of [[PersistenceReprSerDe.serialize()]] call.
+   * the outcome of [[PersistenceReprSerializer.serialize()]] call.
    *
    * @param repr Representation of a persistent message
    * @param serId The ID of the serializer.
@@ -39,8 +39,7 @@ private[akka] object JournalEntry {
       serManifest: String,
       bytes: Array[Byte],
       tags: Set[String],
-      projection: Option[String]
-  ): JournalEntry = JournalEntry(
+      projection: Option[String]): JournalEntry = JournalEntry(
     Long.MinValue,
     repr.persistenceId,
     repr.sequenceNr,
@@ -52,8 +51,7 @@ private[akka] object JournalEntry {
     serManifest,
     tags,
     repr.deleted,
-    projection
-  )
+    projection)
 
   def of(
       index: JLong,
@@ -64,8 +62,7 @@ private[akka] object JournalEntry {
       manifest: String,
       serId: JInt,
       serManifest: String,
-      writerUuid: String
-  ): JournalEntry = {
+      writerUuid: String): JournalEntry = {
     JournalEntry(
       id = index.toLong,
       persistenceId = persistenceId,
@@ -75,8 +72,7 @@ private[akka] object JournalEntry {
       eventManifest = manifest,
       serId = serId,
       serManifest = serManifest,
-      writerUuid = writerUuid
-    )
+      writerUuid = writerUuid)
   }
 
 }
@@ -98,7 +94,7 @@ private[akka] object JournalEntry {
  * @param tags A set of tags.
  * @param deleted Flag to indicate the logical tuple has been deleted.
  */
-private[akka] final case class JournalEntry(
+final private[akka] case class JournalEntry(
     id: Long,
     persistenceId: String,
     sequenceNr: Long,
@@ -110,5 +106,4 @@ private[akka] final case class JournalEntry(
     serManifest: String = "",
     tags: Set[String] = Set.empty,
     deleted: Boolean = false,
-    projected: Option[String] = None
-)
+    projected: Option[String] = None)

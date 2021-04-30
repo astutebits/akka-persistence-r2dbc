@@ -19,33 +19,29 @@ package akka.persistence.postgresql.query.scaladsl
 import akka.NotUsed
 import akka.persistence.r2dbc.client.R2dbc
 import akka.persistence.r2dbc.journal.JournalEntry
-import akka.persistence.r2dbc.journal.ResultUtils.{toJournalEntry, toPersistenceId, toSeqId}
+import akka.persistence.r2dbc.journal.ResultUtils.{ toJournalEntry, toPersistenceId, toSeqId }
 import akka.persistence.r2dbc.query.QueryDao
 import akka.stream.scaladsl.Source
-import java.lang.{Long => JLong}
+import java.lang.{ Long => JLong }
 
 private[query] object PostgreSqlQueryDao {
 
   def fetchPersistenceIdsQuery(offset: JLong): String =
     s"SELECT persistence_id, max(id) AS id FROM event WHERE id >= $offset" +
-        s" GROUP BY persistence_id ORDER BY id"
+    s" GROUP BY persistence_id ORDER BY id"
 
-  def fetchByPersistenceIdQuery(
-      persistenceId: String,
-      fromSeqNr: JLong,
-      toSeqNr: JLong
-  ): String =
+  def fetchByPersistenceIdQuery(persistenceId: String, fromSeqNr: JLong, toSeqNr: JLong): String =
     "SELECT id, persistence_id, sequence_nr, timestamp, payload, manifest, ser_id, ser_manifest, writer_uuid FROM event" +
-        s" WHERE persistence_id = '$persistenceId'" +
-        s" AND sequence_nr >= $fromSeqNr AND sequence_nr <= $toSeqNr" +
-        s" ORDER BY sequence_nr ASC"
+    s" WHERE persistence_id = '$persistenceId'" +
+    s" AND sequence_nr >= $fromSeqNr AND sequence_nr <= $toSeqNr" +
+    s" ORDER BY sequence_nr ASC"
 
   def fetchByTagQuery(tag: String, fromIndex: JLong, toIndex: JLong): String =
     "SELECT e.id, e.persistence_id, e.sequence_nr, e.timestamp, e.payload, e.manifest, e.ser_id, e.ser_manifest, e.writer_uuid" +
-        s" FROM event e " +
-        s" JOIN tag t ON e.id = t.event_id " +
-        s" WHERE t.tag = '$tag' AND e.id >= $fromIndex AND e.id <= $toIndex" +
-        s" ORDER BY e.id ASC"
+    s" FROM event e " +
+    s" JOIN tag t ON e.id = t.event_id " +
+    s" WHERE t.tag = '$tag' AND e.id >= $fromIndex AND e.id <= $toIndex" +
+    s" ORDER BY e.id ASC"
 
   def findHighestIndexQuery(tag: String): String =
     s"SELECT MAX(event_id) AS event_id FROM tag WHERE tag = '$tag'"
@@ -59,28 +55,23 @@ final class PostgreSqlQueryDao(val r2dbc: R2dbc) extends QueryDao {
 
   import PostgreSqlQueryDao._
 
-  override def fetchPersistenceIds(offset: Long): Source[(Long, String), NotUsed] = Source.fromPublisher(
-    r2dbc.withHandle(_.executeQuery(fetchPersistenceIdsQuery(offset), toPersistenceId))
-  )
-      .map(x => x.copy(x._1.toLong))
+  override def fetchPersistenceIds(offset: Long): Source[(Long, String), NotUsed] = Source
+    .fromPublisher(r2dbc.withHandle(_.executeQuery(fetchPersistenceIdsQuery(offset), toPersistenceId)))
+    .map(x => x.copy(x._1.toLong))
 
   override def fetchByPersistenceId(
       persistenceId: String,
       fromSeqNr: Long,
-      toSeqNr: Long
-  ): Source[JournalEntry, NotUsed] = Source.fromPublisher(
-    r2dbc.withHandle(_.executeQuery(fetchByPersistenceIdQuery(persistenceId, fromSeqNr, toSeqNr), toJournalEntry))
-  )
+      toSeqNr: Long): Source[JournalEntry, NotUsed] = Source.fromPublisher(
+    r2dbc.withHandle(_.executeQuery(fetchByPersistenceIdQuery(persistenceId, fromSeqNr, toSeqNr), toJournalEntry)))
 
   override def fetchByTag(tag: String, fromIndex: Long, toIndex: Long): Source[JournalEntry, NotUsed] =
     Source.fromPublisher(r2dbc.withHandle(_.executeQuery(fetchByTagQuery(tag, fromIndex, toIndex), toJournalEntry)))
 
-  override def findHighestIndex(tag: String): Source[Long, NotUsed] = Source.fromPublisher(
-    r2dbc.withHandle(_.executeQuery(findHighestIndexQuery(tag), toSeqId(_, "event_id")))
-  )
+  override def findHighestIndex(tag: String): Source[Long, NotUsed] =
+    Source.fromPublisher(r2dbc.withHandle(_.executeQuery(findHighestIndexQuery(tag), toSeqId(_, "event_id"))))
 
   override def findHighestSeq(persistenceId: String): Source[Long, NotUsed] = Source.fromPublisher(
-    r2dbc.withHandle(_.executeQuery(findHighestSeqQuery(persistenceId), toSeqId(_, "sequence_nr")))
-  )
+    r2dbc.withHandle(_.executeQuery(findHighestSeqQuery(persistenceId), toSeqId(_, "sequence_nr"))))
 
 }

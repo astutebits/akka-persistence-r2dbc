@@ -17,8 +17,8 @@
 package akka.persistence.r2dbc.journal
 
 import scala.collection.immutable.Seq
-import scala.concurrent.{ExecutionContext, Future}
-import scala.util.{Failure, Success, Try}
+import scala.concurrent.{ ExecutionContext, Future }
+import scala.util.{ Failure, Success, Try }
 
 private[akka] object TryUtil {
 
@@ -32,9 +32,9 @@ private[akka] object TryUtil {
   def flatten[A](seq: Seq[Try[A]]): Try[Seq[A]] = {
     @scala.annotation.tailrec
     def go(remaining: Seq[Try[A]], processed: Seq[A]): Try[Seq[A]] = remaining match {
-      case Seq() => Success(processed)
+      case Seq()                 => Success(processed)
       case Success(head) +: tail => go(remaining = tail, processed :+ head)
-      case Failure(t) +: _ => Failure(t)
+      case Failure(t) +: _       => Failure(t)
     }
 
     go(seq, Vector.empty)
@@ -66,6 +66,6 @@ private[akka] object TryUtil {
    * @return the wrapped outcome
    */
   def futureTry[T](future: () => Future[T])(implicit ec: ExecutionContext): Future[Try[T]] =
-    future().map(Success(_)) recover { case e => Failure(e) }
+    future().map(Success(_)).recover { case e => Failure(e) }
 
 }
