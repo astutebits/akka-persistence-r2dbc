@@ -21,6 +21,4 @@ import akka.persistence.journal.AsyncWriteJournal
 /**
  * Base trait for journal implementations that use Reactive Relational Database drivers.
  */
-trait ReactiveJournal extends AsyncWriteJournal with JournalLogic {
-
-}
+trait ReactiveJournal extends AsyncWriteJournal with JournalLogic {}

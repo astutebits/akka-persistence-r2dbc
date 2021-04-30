@@ -17,9 +17,9 @@
 package akka.persistence.mysql.query.javadsl
 
 import akka.NotUsed
-import akka.persistence.mysql.query.scaladsl.{MySqlReadJournal => ScalaMySqlReadJournal}
+import akka.persistence.mysql.query.scaladsl.{ MySqlReadJournal => ScalaMySqlReadJournal }
+import akka.persistence.query.{ EventEnvelope, Offset }
 import akka.persistence.query.javadsl._
-import akka.persistence.query.{EventEnvelope, Offset}
 import akka.stream.javadsl.Source
 
 private[akka] object MySqlReadJournal {
@@ -51,14 +51,14 @@ private[akka] object MySqlReadJournal {
  * absolute path corresponding to the identifier, which is `"mysql-read-journal"`
  * for the default [[MySqlReadJournal#Identifier]]. See `reference.conf`.
  */
-private[query] final class MySqlReadJournal(readJournal: ScalaMySqlReadJournal)
+final private[query] class MySqlReadJournal(readJournal: ScalaMySqlReadJournal)
     extends ReadJournal
-        with CurrentPersistenceIdsQuery
-        with PersistenceIdsQuery
-        with CurrentEventsByPersistenceIdQuery
-        with EventsByPersistenceIdQuery
-        with CurrentEventsByTagQuery
-        with EventsByTagQuery {
+    with CurrentPersistenceIdsQuery
+    with PersistenceIdsQuery
+    with CurrentEventsByPersistenceIdQuery
+    with EventsByPersistenceIdQuery
+    with CurrentEventsByTagQuery
+    with EventsByTagQuery {
 
   override def currentPersistenceIds(): Source[String, NotUsed] =
     readJournal.currentPersistenceIds().asJava
@@ -69,15 +69,13 @@ private[query] final class MySqlReadJournal(readJournal: ScalaMySqlReadJournal)
   override def currentEventsByPersistenceId(
       persistenceId: String,
       fromSequenceNr: Long,
-      toSequenceNr: Long
-  ): Source[EventEnvelope, NotUsed] =
+      toSequenceNr: Long): Source[EventEnvelope, NotUsed] =
     readJournal.currentEventsByPersistenceId(persistenceId, fromSequenceNr, toSequenceNr).asJava
 
   override def eventsByPersistenceId(
       persistenceId: String,
       fromSequenceNr: Long,
-      toSequenceNr: Long
-  ): Source[EventEnvelope, NotUsed] =
+      toSequenceNr: Long): Source[EventEnvelope, NotUsed] =
     readJournal.eventsByPersistenceId(persistenceId, fromSequenceNr, toSequenceNr).asJava
 
   override def currentEventsByTag(tag: String, offset: Offset): Source[EventEnvelope, NotUsed] =
