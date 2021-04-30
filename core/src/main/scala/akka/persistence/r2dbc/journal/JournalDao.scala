@@ -41,12 +41,7 @@ trait JournalDao {
    * @param max maximum number of messages to be returned.
    * @return a [[Source]] with the results
    */
-  def fetchEvents(
-      persistenceId: String,
-      fromSeqNr: Long,
-      toSeqNr: Long,
-      max: Long
-  ): Source[JournalEntry, NotUsed]
+  def fetchEvents(persistenceId: String, fromSeqNr: Long, toSeqNr: Long, max: Long): Source[JournalEntry, NotUsed]
 
   /**
    * Deletes the journal events for the given persistent ID up to the provided sequence number

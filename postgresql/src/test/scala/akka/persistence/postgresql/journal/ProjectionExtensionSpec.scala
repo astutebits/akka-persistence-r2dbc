@@ -21,7 +21,7 @@ import akka.persistence.JournalProtocol._
 import akka.persistence.journal.JournalSpec
 import akka.persistence.r2dbc.client.R2dbc
 import akka.persistence.r2dbc.journal.Projected
-import akka.persistence.{AtomicWrite, PersistentImpl, PersistentRepr}
+import akka.persistence.{ AtomicWrite, PersistentImpl, PersistentRepr }
 import akka.testkit.TestProbe
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicInteger
@@ -46,44 +46,48 @@ trait ProjectionExtensionSpec extends AnyWordSpecLike {
     pId
   }
 
-  protected final def persistShouldSucceed(pId: String, numOfEvents: Int, projections: Map[Int, String] = Map.empty): Unit = {
+  final protected def persistShouldSucceed(
+      pId: String,
+      numOfEvents: Int,
+      projections: Map[Int, String] = Map.empty): Unit = {
     val probe = TestProbe()
     val (fromSeqNr, toSeqNr) = persist(pId, numOfEvents, projections, probe)
 
     probe.expectMsg(WriteMessagesSuccessful)
     (fromSeqNr until toSeqNr).foreach { seqNr =>
-      probe.expectMsgPF() {
-        case WriteMessageSuccess(PersistentImpl(payload, `seqNr`, `pId`, _, _, _, _, _, _), _) =>
-          projections.get(seqNr) match {
-            case Some(sql) => payload shouldBe Projected(genPayload(pId, seqNr), sql)
-            case None => payload shouldBe genPayload(pId, seqNr)
-          }
+      probe.expectMsgPF() { case WriteMessageSuccess(PersistentImpl(payload, `seqNr`, `pId`, _, _, _, _, _, _), _) =>
+        projections.get(seqNr) match {
+          case Some(sql) => payload shouldBe Projected(genPayload(pId, seqNr), sql)
+          case None      => payload shouldBe genPayload(pId, seqNr)
+        }
       }
     }
 
     journal ! ReplayMessages(1, Long.MaxValue, Long.MaxValue, pId, probe.ref)
     (fromSeqNr until toSeqNr).foreach { seqNr =>
-      probe.expectMsg(
-        ReplayedMessage(PersistentImpl(genPayload(pId, seqNr), seqNr, pId, "", deleted = false, Actor.noSender, writerUuid, 0L, None))
-      )
+      probe.expectMsg(ReplayedMessage(
+        PersistentImpl(genPayload(pId, seqNr), seqNr, pId, "", deleted = false, Actor.noSender, writerUuid, 0L, None)))
     }
   }
 
-  protected final def persistShouldFail(pId: String, numOfEvents: Int, reason: String, projections: Map[Int, String] = Map.empty): Unit = {
+  final protected def persistShouldFail(
+      pId: String,
+      numOfEvents: Int,
+      reason: String,
+      projections: Map[Int, String] = Map.empty): Unit = {
     val probe = TestProbe()
     val (fromSeqNr, toSeqNr) = persist(pId, numOfEvents, projections, probe)
 
-    probe.expectMsgPF() {
-      case WriteMessagesFailed(cause, failed) =>
-        cause.getMessage should include(reason)
-        failed shouldBe numOfEvents
+    probe.expectMsgPF() { case WriteMessagesFailed(cause, failed) =>
+      cause.getMessage should include(reason)
+      failed shouldBe numOfEvents
     }
     (fromSeqNr until toSeqNr).foreach { seqNr =>
       probe.expectMsgPF() {
         case WriteMessageFailure(PersistentImpl(payload, `seqNr`, `pId`, _, _, _, _, _, _), cause, _) =>
           projections.get(seqNr) match {
             case Some(sql) => payload shouldBe Projected(genPayload(pId, seqNr), sql)
-            case None => payload shouldBe genPayload(pId, seqNr)
+            case None      => payload shouldBe genPayload(pId, seqNr)
           }
           cause.getMessage should include(reason)
       }
@@ -94,19 +98,17 @@ trait ProjectionExtensionSpec extends AnyWordSpecLike {
   }
 
   @tailrec
-  protected final def persist(
+  final protected def persist(
       persistenceId: String,
       numOfEvents: Int,
       projections: Map[Int, String] = Map.empty,
-      probe: TestProbe = senderProbe
-  ): (Int, Int) = {
+      probe: TestProbe = senderProbe): (Int, Int) = {
     val oldSeq = pIdSeqNrs.get(persistenceId)
     val newSeq = oldSeq + numOfEvents
     if (pIdSeqNrs.replace(persistenceId, oldSeq, newSeq)) {
       writeMessages(oldSeq, newSeq, persistenceId, projections, probe)
       (oldSeq, newSeq)
-    }
-    else persist(persistenceId, numOfEvents)
+    } else persist(persistenceId, numOfEvents)
   }
 
   private def genPayload(pId: String, seqNr: Int) = s"$pId-$seqNr"
@@ -116,16 +118,14 @@ trait ProjectionExtensionSpec extends AnyWordSpecLike {
       toSeqNr: Int,
       pId: String,
       projections: Map[Int, String],
-      probe: TestProbe
-  ): Unit = {
+      probe: TestProbe): Unit = {
     def persistentRepr(seqNr: Int) = PersistentRepr(
-      payload = projections.get(seqNr).map(sql => Projected(genPayload(pId, seqNr), sql))
-          .getOrElse(genPayload(pId, seqNr)),
+      payload =
+        projections.get(seqNr).map(sql => Projected(genPayload(pId, seqNr), sql)).getOrElse(genPayload(pId, seqNr)),
       sequenceNr = seqNr,
       persistenceId = pId,
       sender = probe.ref,
-      writerUuid = writerUuid
-    )
+      writerUuid = writerUuid)
 
     val msgs = (fromSeqNr until toSeqNr).map(i => AtomicWrite(persistentRepr(i)))
     journal ! WriteMessages(msgs, probe.ref, actorInstanceId)
@@ -139,10 +139,12 @@ trait ProjectionExtensionSpec extends AnyWordSpecLike {
 
       persistShouldSucceed(pId, 1, projections)
 
-      val (id: String, name: String) = r2dbc.withHandle(handle => handle.executeQuery(
-        s"SELECT id, value FROM projected WHERE id = '$pId';",
-        _.map((row, _) => (row.get("id", classOf[String]), row.get("value", classOf[String])))
-      )).blockLast()
+      val (id: String, name: String) = r2dbc
+        .withHandle(handle =>
+          handle.executeQuery(
+            s"SELECT id, value FROM projected WHERE id = '$pId';",
+            _.map((row, _) => (row.get("id", classOf[String]), row.get("value", classOf[String])))))
+        .blockLast()
 
       id shouldBe s"$pId"
       name shouldBe "projected"
@@ -161,15 +163,16 @@ trait ProjectionExtensionSpec extends AnyWordSpecLike {
       val projections = Map(
         1 -> s"INSERT INTO projected (id, value) VALUES ('$pId', 'projected')",
         2 -> s"UPDATE projected SET value = '$pId-2' WHERE id = '$pId'",
-        3 -> s"UPDATE projected SET value = '$pId-3' WHERE id = '$pId'"
-      )
+        3 -> s"UPDATE projected SET value = '$pId-3' WHERE id = '$pId'")
 
       persistShouldSucceed(pId, 3, projections)
 
-      val (id: String, name: String) = r2dbc.withHandle(handle => handle.executeQuery(
-        s"SELECT id, value FROM projected WHERE id = '$pId';",
-        _.map((row, _) => (row.get("id", classOf[String]), row.get("value", classOf[String])))
-      )).blockLast()
+      val (id: String, name: String) = r2dbc
+        .withHandle(handle =>
+          handle.executeQuery(
+            s"SELECT id, value FROM projected WHERE id = '$pId';",
+            _.map((row, _) => (row.get("id", classOf[String]), row.get("value", classOf[String])))))
+        .blockLast()
 
       id shouldBe s"$pId"
       name shouldBe s"$pId-3"
@@ -180,15 +183,15 @@ trait ProjectionExtensionSpec extends AnyWordSpecLike {
       val projections = Map(
         1 -> s"INSERT INTO projected (id, value) VALUES ('$pId', 'projected')",
         2 -> s"UPDATE nonexistent SET value = '$pId-2' WHERE id = '$pId'",
-        3 -> s"UPDATE projected SET value = '$pId-3' WHERE id = '$pId'"
-      )
+        3 -> s"UPDATE projected SET value = '$pId-3' WHERE id = '$pId'")
       val reason = """relation "nonexistent" does not exist"""
 
       persistShouldFail(pId, projections.size, reason, projections)
 
-      val rows = r2dbc.withHandle(handled => handled.executeQuery(
-        s"SELECT id, value FROM projected WHERE id = '$pId';", _.getRowsUpdated
-      )).blockLast()
+      val rows = r2dbc
+        .withHandle(handled =>
+          handled.executeQuery(s"SELECT id, value FROM projected WHERE id = '$pId';", _.getRowsUpdated))
+        .blockLast()
       rows shouldBe 0
     }
 
@@ -196,15 +199,16 @@ trait ProjectionExtensionSpec extends AnyWordSpecLike {
       val pId = newPersistenceId
       val projections = Map(
         1 -> s"INSERT INTO projected (id, value) VALUES ('$pId', 'projected')",
-        2 -> s"UPDATE projected SET value = '$pId-2' WHERE id = '$pId'",
-      )
+        2 -> s"UPDATE projected SET value = '$pId-2' WHERE id = '$pId'")
 
       persistShouldSucceed(pId, 3, projections)
 
-      val (id: String, name: String) = r2dbc.withHandle(handle => handle.executeQuery(
-        s"SELECT id, value FROM projected WHERE id = '$pId';",
-        _.map((row, _) => (row.get("id", classOf[String]), row.get("value", classOf[String])))
-      )).blockLast()
+      val (id: String, name: String) = r2dbc
+        .withHandle(handle =>
+          handle.executeQuery(
+            s"SELECT id, value FROM projected WHERE id = '$pId';",
+            _.map((row, _) => (row.get("id", classOf[String]), row.get("value", classOf[String])))))
+        .blockLast()
 
       id shouldBe s"$pId"
       name shouldBe s"$pId-2"

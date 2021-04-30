@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import org.scalafmt.sbt.ScalafmtPlugin.autoImport.scalafmtOnCompile
 import sbt.Keys._
 import sbt.plugins.JvmPlugin
 import sbt.{Def, _}
@@ -49,7 +50,8 @@ object ProjectAutoPlugin extends AutoPlugin {
     crossScalaVersions := Versions.supportedScala,
     scalaVersion := Versions.scala213,
     scalacOptions ++= Seq(
-      "-encoding", "utf8",
+      "-encoding",
+      "utf8",
       "-deprecation",
       "-unchecked",
       if (scalaVersion.value.startsWith("2.13")) "-Wunused" else "-Ywarn-unused",
@@ -62,14 +64,15 @@ object ProjectAutoPlugin extends AutoPlugin {
       if (scalaVersion.value.startsWith("2.13")) "" else "-Ypartial-unification"
     },
     javacOptions ++= Seq(
-      "-encoding", "UTF-8",
+      "-encoding",
+      "UTF-8",
       "-deprecation",
       "-Xlint:unchecked",
       "-XDignore.symbol.file",
       "-Xlint:deprecation"
     ),
+    scalafmtOnCompile := true,
     Test / logBuffered := true,
     Test / testOptions += Tests.Argument("-oDF")
-
   )
 }

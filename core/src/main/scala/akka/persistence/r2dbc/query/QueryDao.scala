@@ -45,11 +45,7 @@ private[akka] trait QueryDao {
    * @param toSeqNr to sequence number (inclusive).
    * @return a [[Source]] with [[JournalEntry]]s matching the criteria.
    */
-  def fetchByPersistenceId(
-      persistenceId: String,
-      fromSeqNr: Long,
-      toSeqNr: Long
-  ): Source[JournalEntry, NotUsed]
+  def fetchByPersistenceId(persistenceId: String, fromSeqNr: Long, toSeqNr: Long): Source[JournalEntry, NotUsed]
 
   /**
    * Returns a [[Source]] with a subset of [[JournalEntry]] with record `index`es in the selected

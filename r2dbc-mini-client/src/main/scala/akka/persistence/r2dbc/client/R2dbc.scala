@@ -16,10 +16,10 @@
 
 package akka.persistence.r2dbc.client
 
-import akka.persistence.r2dbc.client.ReactiveUtils.{appendError, passThrough}
-import io.r2dbc.spi.{Connection, ConnectionFactory}
+import akka.persistence.r2dbc.client.ReactiveUtils.{ appendError, passThrough }
+import io.r2dbc.spi.{ Connection, ConnectionFactory }
 import org.reactivestreams.Publisher
-import reactor.core.publisher.{Flux, Mono}
+import reactor.core.publisher.{ Flux, Mono }
 
 object R2dbc {
 
@@ -42,7 +42,7 @@ object R2dbc {
 /**
  * A basic implementation of a Reactive Relational Database Connection Client.
  */
-final class R2dbc private(val factory: ConnectionFactory) {
+final class R2dbc private (val factory: ConnectionFactory) {
 
   import R2dbc.FN_REQUIRED
 
@@ -72,12 +72,14 @@ final class R2dbc private(val factory: ConnectionFactory) {
    */
   def withHandle[T](fn: Handle => _ <: Publisher[T]): Flux[T] = {
     require(fn != null, FN_REQUIRED)
-    Mono.from(factory.create)
-        .flatMap((it: Connection) => Mono.just(Handle(it)))
-        .flatMapMany((handle: Handle) => Flux.from(fn.apply(handle))
-            .concatWith(passThrough(() => handle.close))
-            .onErrorResume(appendError(() => handle.close))
-        )
+    Mono
+      .from(factory.create)
+      .flatMap((it: Connection) => Mono.just(Handle(it)))
+      .flatMapMany((handle: Handle) =>
+        Flux
+          .from(fn.apply(handle))
+          .concatWith(passThrough(() => handle.close))
+          .onErrorResume(appendError(() => handle.close)))
   }
 
 }

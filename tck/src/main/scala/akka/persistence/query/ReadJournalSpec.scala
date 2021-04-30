@@ -32,23 +32,20 @@ import org.scalatest.flatspec.AnyFlatSpecLike
 import org.scalatest.matchers.should.Matchers
 import scala.annotation.tailrec
 
-abstract class ReadJournalSpec(config: Config)
-    extends AnyFlatSpecLike
-        with Matchers
-        with BeforeAndAfterAll {
+abstract class ReadJournalSpec(config: Config) extends AnyFlatSpecLike with Matchers with BeforeAndAfterAll {
 
   type RJ = ReadJournal
-      with CurrentPersistenceIdsQuery
-      with PersistenceIdsQuery
-      with CurrentEventsByPersistenceIdQuery
-      with EventsByPersistenceIdQuery
-      with CurrentEventsByTagQuery
-      with EventsByTagQuery
+    with CurrentPersistenceIdsQuery
+    with PersistenceIdsQuery
+    with CurrentEventsByPersistenceIdQuery
+    with EventsByPersistenceIdQuery
+    with CurrentEventsByTagQuery
+    with EventsByTagQuery
 
   private val actorInstanceId = 1
 
-  protected implicit val system: ActorSystem = ActorSystem(getClass.getSimpleName, config)
-  protected implicit val mat: Materializer = Materializer(system)
+  implicit protected val system: ActorSystem = ActorSystem(getClass.getSimpleName, config)
+  implicit protected val mat: Materializer = Materializer(system)
 
   protected val readJournal: RJ = PersistenceQuery(system).readJournalFor[RJ](pluginId)
   private val senderProbe: TestProbe = TestProbe()
@@ -67,24 +64,24 @@ abstract class ReadJournalSpec(config: Config)
       PersistentRepr(
         payload = tags match {
           case set if set.nonEmpty => Tagged(s"$pId-$sequenceNr", set)
-          case _ => s"$pId-$sequenceNr"
+          case _                   => s"$pId-$sequenceNr"
         },
         sequenceNr = sequenceNr,
         persistenceId = pId,
         sender = senderProbe.ref,
-        writerUuid = writerUuid.toString)
+        writerUuid = writerUuid.toString
+      )
 
     val msgs = (fromSnr until toSnr).map(i => AtomicWrite(persistentRepr(i)))
     journal ! WriteMessages(msgs, senderProbe.ref, actorInstanceId)
 
     senderProbe.expectMsg(WriteMessagesSuccessful)
     (fromSnr until toSnr).foreach { i =>
-      senderProbe.expectMsgPF() {
-        case WriteMessageSuccess(PersistentImpl(payload, `i`, `pId`, _, _, _, _, _, _), _) =>
-          tags match {
-            case set if set.nonEmpty => payload should be(Tagged(s"$pId-$i", set))
-            case _ => payload should be(s"$pId-$i")
-          }
+      senderProbe.expectMsgPF() { case WriteMessageSuccess(PersistentImpl(payload, `i`, `pId`, _, _, _, _, _, _), _) =>
+        tags match {
+          case set if set.nonEmpty => payload should be(Tagged(s"$pId-$i", set))
+          case _                   => payload should be(s"$pId-$i")
+        }
       }
     }
   }
@@ -120,14 +117,13 @@ abstract class ReadJournalSpec(config: Config)
    * Persists a `numOfEvents` for a `persistenceId` with optional `tags`.
    */
   @tailrec
-  protected final def persist(persistenceId: String, numOfEvents: Int, tags: Set[String] = Set.empty): String = {
+  final protected def persist(persistenceId: String, numOfEvents: Int, tags: Set[String] = Set.empty): String = {
     val oldSeq = pIdSeqNrs.get(persistenceId)
     val newSeq = oldSeq + numOfEvents
     if (pIdSeqNrs.replace(persistenceId, oldSeq, newSeq)) {
       writeMessages(oldSeq, newSeq, persistenceId, writeUuid, tags)
       persistenceId
-    }
-    else persist(persistenceId, numOfEvents)
+    } else persist(persistenceId, numOfEvents)
   }
 
 }

@@ -22,9 +22,8 @@ import org.scalatest.matchers.should.Matchers
 import scala.collection.immutable.Seq
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration.Duration
-import scala.concurrent.{Await, Future}
-import scala.util.{Failure, Success}
-
+import scala.concurrent.{ Await, Future }
+import scala.util.{ Failure, Success }
 
 /**
  * Test case for [[TryUtil]].
@@ -45,13 +44,13 @@ final class TryUtilSpec extends AnyFlatSpecLike with Matchers {
     val mixed = TryUtil.flatten(Seq(Success(1), Failure(iae)))
     val anotherMix = TryUtil.flatten(Seq(Failure(iae), Success(1)))
 
-    onlyFailure should be a Symbol("failure")
+    (onlyFailure should be).a(Symbol("failure"))
     onlyFailure.failure.exception shouldBe iae
-    multipleFailures should be a Symbol("failure")
+    (multipleFailures should be).a(Symbol("failure"))
     multipleFailures.failure.exception shouldBe ise
-    mixed should be a Symbol("failure")
+    (mixed should be).a(Symbol("failure"))
     mixed.failure.exception shouldBe iae
-    anotherMix should be a Symbol("failure")
+    (anotherMix should be).a(Symbol("failure"))
     anotherMix.failure.exception shouldBe iae
   }
 
