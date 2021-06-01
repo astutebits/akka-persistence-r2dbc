@@ -22,12 +22,12 @@ object Versions {
   lazy val supportedScala = Seq(scala213, scala212)
 
   lazy val akka = "2.6.14"
-  lazy val reactor = "3.3.16.RELEASE"
-  lazy val r2dbcSpi = "0.8.4.RELEASE"
+  lazy val reactor = "3.3.17.RELEASE"
+  lazy val r2dbcSpi = "0.8.5.RELEASE"
   lazy val r2dbcPool = "0.8.7.RELEASE"
   lazy val r2dbcPostgreSql = "0.8.7.RELEASE"
   lazy val r2dbcMySql = "0.8.2.RELEASE"
-  lazy val scalaTest = "3.2.7"
+  lazy val scalaTest = "3.2.9"
   lazy val mockito = "1.16.37"
 }
 
