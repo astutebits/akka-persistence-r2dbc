@@ -34,7 +34,7 @@ object Versions {
 object Dependencies {
 
   private val Base = Seq(
-    "ch.qos.logback" % "logback-classic" % "1.2.5" % Test,
+    "ch.qos.logback" % "logback-classic" % "1.2.6" % Test,
     "org.scalatest" %% "scalatest" % Versions.scalaTest % Test
   )
 
