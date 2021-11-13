@@ -18,7 +18,7 @@ import sbt._
 
 object Versions {
   lazy val scala212 = "2.12.15"
-  lazy val scala213 = "2.13.5"
+  lazy val scala213 = "2.13.7"
   lazy val supportedScala = Seq(scala213, scala212)
 
   lazy val akka = "2.6.16"
@@ -27,7 +27,7 @@ object Versions {
   lazy val r2dbcPool = "0.8.7.RELEASE"
   lazy val r2dbcPostgreSql = "0.8.10.RELEASE"
   lazy val r2dbcMySql = "0.8.2.RELEASE"
-  lazy val scalaTest = "3.2.10"  
+  lazy val scalaTest = "3.2.10"
   lazy val mockito = "1.16.46"
 }
 
@@ -35,41 +35,29 @@ object Dependencies {
 
   private val Base = Seq(
     "ch.qos.logback" % "logback-classic" % "1.2.6" % Test,
-    "org.scalatest" %% "scalatest" % Versions.scalaTest % Test
-  )
+    "org.scalatest" %% "scalatest" % Versions.scalaTest % Test)
 
-  private val Libraries = Base ++ Seq(
-    "com.typesafe.akka" %% "akka-persistence-tck" % Versions.akka % Test
-  )
+  private val Libraries = Base ++ Seq("com.typesafe.akka" %% "akka-persistence-tck" % Versions.akka % Test)
 
   val R2dbcClient: Seq[ModuleID] = Base ++ Seq(
     "io.r2dbc" % "r2dbc-spi" % Versions.r2dbcSpi,
     "io.projectreactor" % "reactor-core" % Versions.reactor,
-
-    "io.r2dbc" % "r2dbc-spi-test" % Versions.r2dbcSpi % Test
-  )
+    "io.r2dbc" % "r2dbc-spi-test" % Versions.r2dbcSpi % Test)
 
   val Core: Seq[ModuleID] = Base ++ Seq(
     "com.typesafe.akka" %% "akka-persistence-query" % Versions.akka,
     "io.r2dbc" % "r2dbc-pool" % Versions.r2dbcPool,
-
     "org.mockito" %% "mockito-scala-scalatest" % Versions.mockito % Test,
-    "com.typesafe.akka" %% "akka-stream-testkit" % Versions.akka % Test
-  )
+    "com.typesafe.akka" %% "akka-stream-testkit" % Versions.akka % Test)
 
-  val PostgreSQL: Seq[ModuleID] = Libraries ++ Seq(
-    "io.r2dbc" % "r2dbc-postgresql" % Versions.r2dbcPostgreSql
-  )
+  val PostgreSQL: Seq[ModuleID] = Libraries ++ Seq("io.r2dbc" % "r2dbc-postgresql" % Versions.r2dbcPostgreSql)
 
-  val MySQL: Seq[ModuleID] = Libraries ++ Seq(
-    "dev.miku" % "r2dbc-mysql" % Versions.r2dbcMySql
-  )
+  val MySQL: Seq[ModuleID] = Libraries ++ Seq("dev.miku" % "r2dbc-mysql" % Versions.r2dbcMySql)
 
   val TCK: Seq[ModuleID] = Seq(
     "com.typesafe.akka" %% "akka-persistence-query" % Versions.akka,
     "org.scalatest" %% "scalatest" % Versions.scalaTest,
-    "com.typesafe.akka" %% "akka-stream-testkit" % Versions.akka
-  )
+    "com.typesafe.akka" %% "akka-stream-testkit" % Versions.akka)
 
   val Perf: Seq[ModuleID] = Libraries
 
