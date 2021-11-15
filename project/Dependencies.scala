@@ -18,7 +18,7 @@ import sbt._
 
 object Versions {
   lazy val scala212 = "2.12.15"
-  lazy val scala213 = "2.13.5"
+  lazy val scala213 = "2.13.6"
   lazy val supportedScala = Seq(scala213, scala212)
 
   lazy val akka = "2.6.16"
