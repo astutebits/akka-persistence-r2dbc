@@ -24,7 +24,7 @@ import akka.serialization.SerializationExtension
  */
 private[akka] trait ReactiveSnapshotStore extends SnapshotStore with SnapshotLogic {
 
-  override final val serializer: SnapshotSerializer =
+  final override val serializer: SnapshotSerializer =
     SnapshotSerializerImpl(SerializationExtension(context.system))
 
 }

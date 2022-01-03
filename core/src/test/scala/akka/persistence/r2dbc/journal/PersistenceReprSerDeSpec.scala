@@ -16,16 +16,21 @@
 
 package akka.persistence.r2dbc.journal
 
-import akka.actor.{ActorSystem, ExtendedActorSystem}
+import akka.actor.{ ActorSystem, ExtendedActorSystem }
 import akka.persistence.PersistentRepr
 import akka.persistence.journal.Tagged
-import akka.serialization.{AsyncSerializerWithStringManifest, Serialization, SerializationExtension, SerializerWithStringManifest}
+import akka.serialization.{
+  AsyncSerializerWithStringManifest,
+  Serialization,
+  SerializationExtension,
+  SerializerWithStringManifest
+}
 import com.typesafe.config.ConfigFactory
 import org.scalatest.flatspec.AnyFlatSpecLike
 import org.scalatest.matchers.should.Matchers
 import scala.collection.immutable.Set
 import scala.concurrent.duration._
-import scala.concurrent.{Await, Future}
+import scala.concurrent.{ Await, Future }
 
 object PersistenceReprSerDeSpec {
 
@@ -101,17 +106,15 @@ object PersistenceReprSerDeSpec {
   case object Test
 
 }
+
 /**
  * Test case for [[PersistenceReprSerDe]].
  */
-final class PersistenceReprSerDeSpec
-    extends AnyFlatSpecLike
-        with Matchers {
+final class PersistenceReprSerDeSpec extends AnyFlatSpecLike with Matchers {
 
   import PersistenceReprSerDeSpec._
 
-  private val config = ConfigFactory.parseString(
-    """
+  private val config = ConfigFactory.parseString("""
        akka {
         actor {
           serializers {
@@ -131,152 +134,180 @@ final class PersistenceReprSerDeSpec
   private val asyncSerDe = new PersistenceReprSerDe(SerializationExtension(system))(system.dispatcher)
 
   private def assertSerDe(repr: PersistentRepr, additionallyAssert: JournalEntry => Unit): Unit = {
-    val serialized = Await.result(asyncSerDe.serialize(repr), 1.second) getOrElse fail(s"Cannot serialize $repr")
-    val deserialized = Await.result(asyncSerDe.deserialize(serialized), 1.second) getOrElse fail(s"Cannot deserialize $serialized")
+    val serialized = Await.result(asyncSerDe.serialize(repr), 1.second).getOrElse(fail(s"Cannot serialize $repr"))
+    val deserialized =
+      Await.result(asyncSerDe.deserialize(serialized), 1.second).getOrElse(fail(s"Cannot deserialize $serialized"))
 
-    assert(repr.persistenceId == serialized.persistenceId
-        && serialized.persistenceId == deserialized.persistenceId)
-    assert(repr.sequenceNr == serialized.sequenceNr
-        && serialized.sequenceNr == deserialized.sequenceNr)
-    assert(repr.manifest == serialized.eventManifest
-        && serialized.eventManifest == deserialized.manifest)
+    assert(
+      repr.persistenceId == serialized.persistenceId
+      && serialized.persistenceId == deserialized.persistenceId)
+    assert(
+      repr.sequenceNr == serialized.sequenceNr
+      && serialized.sequenceNr == deserialized.sequenceNr)
+    assert(
+      repr.manifest == serialized.eventManifest
+      && serialized.eventManifest == deserialized.manifest)
 
     additionallyAssert(serialized)
   }
 
   "PersistenceReprSerDe" should "serialize and deserialize message with Serializer implementation" in {
-    val persistentRepr = PersistentRepr(
-      payload = Message1("abc"),
-      sequenceNr = 123, persistenceId = "foo", manifest = "manifest"
-    )
-    assertSerDe(persistentRepr, it => {
-      it.serId shouldBe 10000
-      it.serManifest shouldBe "1"
-      it.tags shouldBe Set.empty[String]
-      it.projected shouldBe None
-    })
+    val persistentRepr =
+      PersistentRepr(payload = Message1("abc"), sequenceNr = 123, persistenceId = "foo", manifest = "manifest")
+    assertSerDe(
+      persistentRepr,
+      it => {
+        it.serId shouldBe 10000
+        it.serManifest shouldBe "1"
+        it.tags shouldBe Set.empty[String]
+        it.projected shouldBe None
+      })
   }
 
   it should "serialize and deserialize message with AsyncSerializer implementation" in {
-    val persistentRepr = PersistentRepr(
-      payload = Message2("abc"),
-      sequenceNr = 123, persistenceId = "foo", manifest = "manifest"
-    )
-    assertSerDe(persistentRepr, it => {
-      it.serId shouldBe 10001
-      it.serManifest shouldBe "2"
-      it.tags shouldBe Set.empty[String]
-      it.projected shouldBe None
-    })
+    val persistentRepr =
+      PersistentRepr(payload = Message2("abc"), sequenceNr = 123, persistenceId = "foo", manifest = "manifest")
+    assertSerDe(
+      persistentRepr,
+      it => {
+        it.serId shouldBe 10001
+        it.serManifest shouldBe "2"
+        it.tags shouldBe Set.empty[String]
+        it.projected shouldBe None
+      })
   }
 
   it should "serialize and deserialize Tagged with Serializer implementation" in {
     val persistentRepr = PersistentRepr(
       payload = Tagged(Message1("abc"), Set("tag")),
-      sequenceNr = 123, persistenceId = "foo", manifest = "manifest"
-    )
-    assertSerDe(persistentRepr, it => {
-      it.serId shouldBe 10000
-      it.serManifest shouldBe "1"
-      it.tags shouldBe Set("tag")
-      it.projected shouldBe None
-    })
+      sequenceNr = 123,
+      persistenceId = "foo",
+      manifest = "manifest")
+    assertSerDe(
+      persistentRepr,
+      it => {
+        it.serId shouldBe 10000
+        it.serManifest shouldBe "1"
+        it.tags shouldBe Set("tag")
+        it.projected shouldBe None
+      })
   }
 
   it should "serialize and deserialize Tagged with AsyncSerializer implementation" in {
     val persistentRepr = PersistentRepr(
       payload = Tagged(Message2("abc"), Set("tag")),
-      sequenceNr = 123, persistenceId = "foo", manifest = "manifest"
-    )
-    assertSerDe(persistentRepr, it => {
-      it.serId shouldBe 10001
-      it.serManifest shouldBe "2"
-      it.tags shouldBe Set("tag")
-      it.projected shouldBe None
-    })
+      sequenceNr = 123,
+      persistenceId = "foo",
+      manifest = "manifest")
+    assertSerDe(
+      persistentRepr,
+      it => {
+        it.serId shouldBe 10001
+        it.serManifest shouldBe "2"
+        it.tags shouldBe Set("tag")
+        it.projected shouldBe None
+      })
   }
 
   it should "serialize and deserialize Projected with Serializer implementation" in {
     val persistentRepr = PersistentRepr(
       payload = Projected(Message1("abc"), "INSERT INTO"),
-      sequenceNr = 123, persistenceId = "foo", manifest = "manifest"
-    )
-    assertSerDe(persistentRepr, it => {
-      it.serId shouldBe 10000
-      it.serManifest shouldBe "1"
-      it.tags shouldBe Set.empty[String]
-      it.projected shouldBe Some("INSERT INTO")
-    })
+      sequenceNr = 123,
+      persistenceId = "foo",
+      manifest = "manifest")
+    assertSerDe(
+      persistentRepr,
+      it => {
+        it.serId shouldBe 10000
+        it.serManifest shouldBe "1"
+        it.tags shouldBe Set.empty[String]
+        it.projected shouldBe Some("INSERT INTO")
+      })
   }
 
   it should "serialize and deserialize Projected with AsyncSerializer implementation" in {
     val persistentRepr = PersistentRepr(
       payload = Projected(Message2("abc"), "INSERT INTO"),
-      sequenceNr = 123, persistenceId = "foo", manifest = "manifest"
-    )
-    assertSerDe(persistentRepr, it => {
-      it.serId shouldBe 10001
-      it.serManifest shouldBe "2"
-      it.tags shouldBe Set.empty[String]
-      it.projected shouldBe Some("INSERT INTO")
-    })
+      sequenceNr = 123,
+      persistenceId = "foo",
+      manifest = "manifest")
+    assertSerDe(
+      persistentRepr,
+      it => {
+        it.serId shouldBe 10001
+        it.serManifest shouldBe "2"
+        it.tags shouldBe Set.empty[String]
+        it.projected shouldBe Some("INSERT INTO")
+      })
   }
 
   it should "serialize and deserialize Tagged(Projected) with Serializer implementation" in {
     val persistentRepr = PersistentRepr(
       payload = Tagged(Projected(Message1("abc"), "INSERT INTO"), Set("tag")),
-      sequenceNr = 123, persistenceId = "foo", manifest = "manifest"
-    )
-    assertSerDe(persistentRepr, it => {
-      it.serId shouldBe 10000
-      it.serManifest shouldBe "1"
-      it.tags shouldBe Set("tag")
-      it.projected shouldBe Some("INSERT INTO")
-    })
+      sequenceNr = 123,
+      persistenceId = "foo",
+      manifest = "manifest")
+    assertSerDe(
+      persistentRepr,
+      it => {
+        it.serId shouldBe 10000
+        it.serManifest shouldBe "1"
+        it.tags shouldBe Set("tag")
+        it.projected shouldBe Some("INSERT INTO")
+      })
   }
 
   it should "serialize and deserialize Tagged(Projected) with AsyncSerializer implementation" in {
     val persistentRepr = PersistentRepr(
       payload = Tagged(Projected(Message2("abc"), "INSERT INTO"), Set("tag")),
-      sequenceNr = 123, persistenceId = "foo", manifest = "manifest"
-    )
-    assertSerDe(persistentRepr, it => {
-      it.serId shouldBe 10001
-      it.serManifest shouldBe "2"
-      it.tags shouldBe Set("tag")
-      it.projected shouldBe Some("INSERT INTO")
-    })
+      sequenceNr = 123,
+      persistenceId = "foo",
+      manifest = "manifest")
+    assertSerDe(
+      persistentRepr,
+      it => {
+        it.serId shouldBe 10001
+        it.serManifest shouldBe "2"
+        it.tags shouldBe Set("tag")
+        it.projected shouldBe Some("INSERT INTO")
+      })
   }
 
   it should "serialize and deserialize Projected(Tagged) with Serializer implementation" in {
     val persistentRepr = PersistentRepr(
       payload = Projected(Tagged(Message1("abc"), Set("tag")), "INSERT INTO"),
-      sequenceNr = 123, persistenceId = "foo", manifest = "manifest"
-    )
-    assertSerDe(persistentRepr, it => {
-      it.serId shouldBe 10000
-      it.serManifest shouldBe "1"
-      it.tags shouldBe Set("tag")
-      it.projected shouldBe Some("INSERT INTO")
-    })
+      sequenceNr = 123,
+      persistenceId = "foo",
+      manifest = "manifest")
+    assertSerDe(
+      persistentRepr,
+      it => {
+        it.serId shouldBe 10000
+        it.serManifest shouldBe "1"
+        it.tags shouldBe Set("tag")
+        it.projected shouldBe Some("INSERT INTO")
+      })
   }
 
   it should "serialize and deserialize Projected(Tagged) with AsyncSerializer implementation" in {
     val persistentRepr = PersistentRepr(
       payload = Projected(Tagged(Message2("abc"), Set("tag")), "INSERT INTO"),
-      sequenceNr = 123, persistenceId = "foo", manifest = "manifest"
-    )
-    assertSerDe(persistentRepr, it => {
-      it.serId shouldBe 10001
-      it.serManifest shouldBe "2"
-      it.tags shouldBe Set("tag")
-      it.projected shouldBe Some("INSERT INTO")
-    })
+      sequenceNr = 123,
+      persistenceId = "foo",
+      manifest = "manifest")
+    assertSerDe(
+      persistentRepr,
+      it => {
+        it.serId shouldBe 10001
+        it.serManifest shouldBe "2"
+        it.tags shouldBe Set("tag")
+        it.projected shouldBe Some("INSERT INTO")
+      })
   }
 
   it should "catch serialization errors" in {
     val serialized = Await.result(asyncSerDe.serialize(PersistentRepr(Test)), 1.second)
-    serialized should be a Symbol("failure")
+    (serialized should be).a(Symbol("failure"))
   }
 
 }

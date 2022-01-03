@@ -1,5 +1,5 @@
 # CircleCI configuration file
-version: 2
+version: 2.1
 jobs:
   build:
     docker:
@@ -22,7 +22,7 @@ jobs:
             # fallback to using the latest cache if no exact match is found
             - v1-dependencies-
 
-      - run: sbt -v '++2.12.13 test:compile ; ++2.13.4 test:compile'
+      - run: sbt -v '+ test:compile'
 
       - save_cache:
           paths:
@@ -46,3 +46,23 @@ jobs:
       - run:
           name: Stop the Docker Compose stack
           command: docker-compose -p akka-persistence -f docker/docker-compose.yml down
+
+      - when:
+          condition:
+            or:
+              - equal: [ trunk, <<pipeline.git.branch>> ]
+              - equal: [ v*, <<pipeline.git.tag>> ]
+          steps:
+            - run: |
+                export GPG_TTY=$(tty)
+                echo ${PGP_SECRET} | base64 --decode | gpg --batch --import
+                sbt '; + publishSigned'
+
+      - when:
+          condition:
+              equal: [ v*, <<pipeline.git.tag>> ]
+          steps:
+            - run: |
+                export GPG_TTY=$(tty)
+                echo ${PGP_SECRET} | base64 --decode | gpg --batch --import
+                sbt 'sonatypeBundleRelease'

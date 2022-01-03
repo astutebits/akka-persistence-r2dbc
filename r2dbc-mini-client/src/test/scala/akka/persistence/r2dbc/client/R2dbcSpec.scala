@@ -16,10 +16,10 @@
 
 package akka.persistence.r2dbc.client
 
-import io.r2dbc.spi.test.{MockConnection, MockConnectionFactory}
+import io.r2dbc.spi.test.{ MockConnection, MockConnectionFactory }
 import org.scalatest.flatspec.AnyFlatSpecLike
 import org.scalatest.matchers.should.Matchers
-import reactor.core.publisher.{Flux, Mono}
+import reactor.core.publisher.{ Flux, Mono }
 import reactor.test.StepVerifier
 
 /**
@@ -32,10 +32,7 @@ final class R2dbcSpec extends AnyFlatSpecLike with Matchers {
     val connectionFactory = MockConnectionFactory.builder.connection(connection).build
     val r2dbc = R2dbc(connectionFactory)
 
-    StepVerifier.create(r2dbc.withHandle(_ => Flux.just(1, 2)))
-        .expectNext(1)
-        .expectNext(2)
-        .verifyComplete
+    StepVerifier.create(r2dbc.withHandle(_ => Flux.just(1, 2))).expectNext(1).expectNext(2).verifyComplete
 
     connection.isCloseCalled shouldBe true
   }
@@ -45,9 +42,10 @@ final class R2dbcSpec extends AnyFlatSpecLike with Matchers {
     val connectionFactory = MockConnectionFactory.builder.connection(connection).build
     val r2dbc = R2dbc(connectionFactory)
 
-    StepVerifier.create(r2dbc.withHandle(_ => Mono.error[Int](new IllegalArgumentException("BOOM!"))))
-        .expectErrorMessage("BOOM!")
-        .verify
+    StepVerifier
+      .create(r2dbc.withHandle(_ => Mono.error[Int](new IllegalArgumentException("BOOM!"))))
+      .expectErrorMessage("BOOM!")
+      .verify
 
     connection.isCloseCalled shouldBe true
   }
@@ -57,10 +55,7 @@ final class R2dbcSpec extends AnyFlatSpecLike with Matchers {
     val connectionFactory = MockConnectionFactory.builder.connection(connection).build
     val r2dbc = R2dbc(connectionFactory)
 
-    StepVerifier.create(r2dbc.inTransaction(_ => Flux.just(1, 2)))
-        .expectNext(1)
-        .expectNext(2)
-        .verifyComplete
+    StepVerifier.create(r2dbc.inTransaction(_ => Flux.just(1, 2))).expectNext(1).expectNext(2).verifyComplete
 
     connection.isBeginTransactionCalled shouldBe true
     connection.isCommitTransactionCalled shouldBe true
@@ -72,9 +67,10 @@ final class R2dbcSpec extends AnyFlatSpecLike with Matchers {
     val connectionFactory = MockConnectionFactory.builder.connection(connection).build
     val r2dbc = R2dbc(connectionFactory)
 
-    StepVerifier.create(r2dbc.inTransaction(_ => Mono.error[Int](new IllegalArgumentException("BOOM!"))))
-        .expectErrorMessage("BOOM!")
-        .verify
+    StepVerifier
+      .create(r2dbc.inTransaction(_ => Mono.error[Int](new IllegalArgumentException("BOOM!"))))
+      .expectErrorMessage("BOOM!")
+      .verify
 
     connection.isBeginTransactionCalled shouldBe true
     connection.isRollbackTransactionCalled shouldBe true
