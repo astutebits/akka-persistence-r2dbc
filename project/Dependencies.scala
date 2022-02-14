@@ -18,7 +18,7 @@ import sbt._
 
 object Versions {
   lazy val scala212 = "2.12.15"
-  lazy val scala213 = "2.13.7"
+  lazy val scala213 = "2.13.8"
   lazy val supportedScala = Seq(scala213, scala212)
 
   lazy val akka = "2.6.18"
@@ -28,7 +28,7 @@ object Versions {
   lazy val r2dbcPostgreSql = "0.8.11.RELEASE"
   lazy val r2dbcMySql = "0.8.2.RELEASE"
   lazy val scalaTest = "3.2.11"
-  lazy val mockito = "1.16.49"
+  lazy val mockito = "1.16.55"
 }
 
 object Dependencies {
