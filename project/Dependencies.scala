@@ -27,7 +27,7 @@ object Versions {
   lazy val r2dbcPool = "0.8.8.RELEASE"
   lazy val r2dbcPostgreSql = "0.8.11.RELEASE"
   lazy val r2dbcMySql = "0.8.2.RELEASE"
-  lazy val scalaTest = "3.2.11"
+  lazy val scalaTest = "3.2.14"
   lazy val mockito = "1.16.55"
 }
 
