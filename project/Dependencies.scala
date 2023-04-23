@@ -34,7 +34,7 @@ object Versions {
 object Dependencies {
 
   private val Base = Seq(
-    "ch.qos.logback" % "logback-classic" % "1.2.7" % Test,
+    "ch.qos.logback" % "logback-classic" % "1.2.12" % Test,
     "org.scalatest" %% "scalatest" % Versions.scalaTest % Test)
 
   private val Libraries = Base ++ Seq("com.typesafe.akka" %% "akka-persistence-tck" % Versions.akka % Test)
